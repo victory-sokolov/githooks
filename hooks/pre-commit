@@ -1,0 +1,13 @@
+#!/bin/bash
+
+protected="master"
+current_branch=$(git symbolic-ref HEAD | sed -e 's,.*/\(.*\),\1,')
+
+# Prevent from commiting to master branch
+if [ $current_branch == protected ]
+then
+    echo "$protected is a protected branch, please create your own branch and use PR."
+    exit
+fi
+
+

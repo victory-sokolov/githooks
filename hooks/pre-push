@@ -1,0 +1,10 @@
+#!/bin/bash
+
+current_branch=`git rev-parse --abbrev-ref HEAD`
+protected_branches="^(master|develop)"
+
+# Prevent from pushing to master
+if [ "current_branch" =~ $protected_branches]
+then
+	echo -e "\n🚫 Cannot push to remote $BRANCH branch, please create your own branch and use PR."
+fi

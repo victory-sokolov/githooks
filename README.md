@@ -1,2 +1,2 @@
-# githooks
+# Git Hooks
 Git hooks collection

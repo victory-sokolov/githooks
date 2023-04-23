@@ -1,6 +1,6 @@
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v4.0.1
+    rev: v4.4.0
     hooks:
       - id: trailing-whitespace
       - id: end-of-file-fixer
@@ -16,23 +16,36 @@ repos:
       args: [--config=pyproject.toml]
 
   - repo: https://github.com/pycqa/isort
-    rev: 5.9.2
+    rev: 5.12.0
     hooks:
       - id: isort
         files: "\\.(py)$"
         args: [--check, --settings-path=.isort.cfg]
 
   - repo: https://github.com/ambv/black
-    rev: stable
+    rev: 23.3.0
     hooks:
       - id: black
 
   -   repo: https://gitlab.com/pycqa/flake8
-      rev: 3.7.9
+      rev: 6.0.0
       hooks:
-      - id: flake8
+        - id: flake8
 
   - repo: https://github.com/asottile/add-trailing-comma
-    rev: v2.2.3
+    rev: v2.4.0
     hooks:
-    -   id: add-trailing-comma
+      - id: add-trailing-comma
+
+  - repo: local
+    hooks:
+      - id: pylint
+        name: pylint
+        entry: pylint
+        language: system
+        types: [python]
+
+  - repo: https://github.com/pre-commit/mirrors-mypy
+    rev: ''
+    hooks:
+      - id: mypy

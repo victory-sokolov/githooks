@@ -61,6 +61,8 @@ repos:
     rev: 'v1.2.0'
     hooks:
       - id: mypy
+        additional_dependencies:
+          - django-stubs
 
   - id: check-django-migrations
     name: Check django migrations
@@ -79,3 +81,9 @@ repos:
     hooks:
       - id: commitizen
         stages: [commit-msg]
+
+  - repo: https://github.com/lk16/detect-missing-init
+    rev: v0.1.6
+    hooks:
+    - id: detect-missing-init
+      # args: ['--create', "--track", "--python-folders", "tests,somefolder,otherfolder"]

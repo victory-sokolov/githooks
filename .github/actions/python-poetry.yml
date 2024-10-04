@@ -1,0 +1,26 @@
+name: Install Python dependencies
+description: Set up dependencies for Python
+
+runs:
+  using: composite
+  steps:
+    - uses: actions/setup-python@v5.2.0
+      with:
+        python-version: 3.12.5
+        cache: 'pip'
+
+    - name: Install poetry
+      shell: sh
+      run: |
+        pip install poetry==1.8.3
+
+    - name: Cache the virtualenv
+      uses: actions/cache@v4.0.2
+      with:
+        path: ./.venv
+        key: ${{ runner.os }}-venv-${{ hashFiles('**/poetry.lock') }}
+
+    - name: Install dependencies
+      shell: sh
+      run: |
+        poetry install --no-interaction --no-root

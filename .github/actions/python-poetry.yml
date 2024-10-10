@@ -9,6 +9,10 @@ runs:
         python-version: 3.12.5
         cache: 'pip'
 
+    - uses: https://github.com/abravalheri/validate-pyproject@0.20.2
+      hooks:
+        - id: validate-pyproject
+
     - name: Install poetry
       shell: sh
       run: |

@@ -1,0 +1,14 @@
+name: Automatic code review
+
+on:
+    workflow_dispatch:
+
+jobs:
+  code-review:
+    runs-on: ubuntu-latest
+    steps:
+
+      - name: Code review
+        uses: reviewdog/action-setup@v1
+        with:
+          reviewdog_version: latest

@@ -82,6 +82,12 @@ repos:
       - id: commitizen
         stages: [commit-msg]
 
+  - repo: https://github.com/adamchainz/django-upgrade
+    rev: '1.22.2'
+    hooks:
+      - id: django-upgrade
+        args: [--target-version, '5.0']
+
   - repo: https://github.com/lk16/detect-missing-init
     rev: v0.1.6
     hooks:
@@ -98,3 +104,10 @@ repos:
     rev: v8.19.0
     hooks:
       - id: gitleaks
+
+  # Check if uv.lock is up to date
+  - repo: https://github.com/astral-sh/uv-pre-commit
+    # uv version.
+    rev: 0.5.11
+    hooks:
+      - id: uv-lock

@@ -69,3 +69,7 @@ jobs:
             git push origin "$TAG_NAME"
             echo "Created and pushed tag $TAG_NAME"
           fi
+      - name: Debug tag creation
+        run: |
+          echo "Tag created: ${{ needs.create-tag.outputs.should_create_tag }}"
+          echo "Tag name: ${{ needs.create-tag.outputs.tag_name }}"

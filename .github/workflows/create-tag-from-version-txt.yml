@@ -5,7 +5,7 @@ on:
     outputs:
       should_create_tag: 
         description: 'Indicates if a tag should be created'
-        value: ${{ jobs.create-tag.outputs.tag_created }}
+        value: ${{ jobs.create-tag.outputs.should_create_tag }}
       tag_name: 
         description: 'The name of the created tag'
         value: ${{ jobs.create-tag.outputs.tag_name }}
@@ -63,11 +63,9 @@ jobs:
 
           # Check if tag already exists
           if git tag -l "$TAG_NAME" | grep -q "$TAG_NAME"; then
-            echo "tag_created=false" >> $GITHUB_OUTPUT
             echo "Tag $TAG_NAME already exists."
           else
             git tag "$TAG_NAME"
             git push origin "$TAG_NAME"
-            echo "tag_created=true" >> $GITHUB_OUTPUT
             echo "Created and pushed tag $TAG_NAME"
           fi

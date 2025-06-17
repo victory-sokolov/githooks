@@ -64,12 +64,14 @@ jobs:
           # Check if tag already exists
           if git tag -l "$TAG_NAME" | grep -q "$TAG_NAME"; then
             echo "Tag $TAG_NAME already exists."
+            echo "should_create_tag=false" >> $GITHUB_OUTPUT
           else
             git tag "$TAG_NAME"
             git push origin "$TAG_NAME"
             echo "Created and pushed tag $TAG_NAME"
+            echo "should_create_tag=true" >> $GITHUB_OUTPUT
           fi
       - name: Debug tag creation
         run: |
-          echo "Tag created: ${{ needs.create-tag.outputs.should_create_tag }}"
-          echo "Tag name: ${{ needs.create-tag.outputs.tag_name }}"
+          echo "Tag created: ${{ steps.create_tag.outputs.should_create_tag }}"
+          echo "Tag name: ${{ steps.create_tag.outputs.tag_name }}"

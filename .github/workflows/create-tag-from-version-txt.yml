@@ -2,6 +2,13 @@ name: Create Tag from VERSION.txt
 
 on:
   workflow_call:
+    outputs:
+      should_create_tag: 
+        description: 'Indicates if a tag should be created'
+        value: ${{ jobs.create-tag.outputs.tag_created }}
+      tag_name: 
+        description: 'The name of the created tag'
+        value: ${{ jobs.create-tag.outputs.tag_name }}
 
 jobs:
   create-tag:
@@ -11,7 +18,7 @@ jobs:
       (github.event.workflow_run.conclusion == 'success' &&
       github.event.workflow_run.head_branch == 'master')
     outputs:
-      tag_created: ${{ steps.create_tag.outputs.tag_created || 'false' }}
+      should_create_tag: ${{ steps.create_tag.outputs.should_create_tag || 'false' }}
       tag_name: ${{ steps.create_tag.outputs.tag_name || '' }}
 
     steps:

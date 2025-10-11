@@ -1,18 +1,18 @@
-name: CI
+name: Node CI
 
-on: 
+on:
   push:
-    branches: [main]
+    branches: [main, master]
   pull_request:
-    branches: [main]
+    branches: [main, master]
+    types: [opened, reopened, synchronize, labeled]
   workflow_dispatch:
-
 jobs:
   lint-test:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout commit
-        uses: actions/checkout@v3
+        uses: actions/checkout@v5
         with:
           fetch-depth: 0
 
@@ -21,24 +21,27 @@ jobs:
         id: nvm
 
       - name: Use Node.js ${{ steps.nvm.outputs.NODE_VERSION }}
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v5.0.0
         with:
           node-version: ${{ steps.nvm.outputs.NODE_VERSION }}
-      
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4.1.0
+
       - name: Install Dependencies
-        run: yarn install
+        run: pnpm install
 
       - name: Run linter
-        run: yarn lint
-
-      - name: Run formatter
-        run: yarn format
+        run: pnpm lint
 
       - name: Run typechecker
         run: yarn typecheck
-      
+
       - name: Run tests
-        run: yarn test:no-watch
+        run: pnpm test
+
+      - name: Audit packages
+        run: pnpm audit --audit-level=moderate
 
       - name: Build
-        run: yarn build
+        run: pnpm build

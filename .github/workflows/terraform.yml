@@ -1,36 +1,54 @@
-name: tfsec-pr-commenter
+name: Terraform Quality Checks
 on:
-  push:
-    branches: [master, main]
+  workflow_call:  # This makes it callable from other workflows
+    # Optional: define inputs that other workflows can pass
+    inputs:
+      terraform_version:
+        description: 'Terraform version to use'
+        required: false
+        type: string
+        default: 'latest'
+      working_directory:
+        description: 'Directory containing Terraform code'
+        required: false
+        type: string
+        default: '.'
 
 jobs:
   tfsec:
     name: tfsec PR commenter
     runs-on: ubuntu-latest
-
     permissions:
       contents: read
       pull-requests: write
-
     steps:
       - name: Clone repo
         uses: actions/checkout@master
       - name: tfsec
         uses: aquasecurity/tfsec-pr-commenter-action@v1.3.1
         with:
-          github_token: ${{ github.token }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
 
   terraform-code-quality:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@master
       - uses: hashicorp/setup-terraform@main
+        with:
+          terraform_version: ${{ inputs.terraform_version }}
+      
+      - name: Change to working directory
+        run: cd ${{ inputs.working_directory }}
+        shell: bash
 
       - name: terraform fmt
         run: terraform fmt -check=true
+        working-directory: ${{ inputs.working_directory }}
 
       - name: terraform validate
         run: terraform validate
+        working-directory: ${{ inputs.working_directory }}
 
       - name: Run terraform plan
         run: terraform plan
+        working-directory: ${{ inputs.working_directory }}

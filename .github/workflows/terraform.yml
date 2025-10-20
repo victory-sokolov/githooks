@@ -1,6 +1,6 @@
 name: Terraform Quality Checks
 on:
-  workflow_call:  # This makes it callable from other workflows
+  workflow_call: # This makes it callable from other workflows
     # Optional: define inputs that other workflows can pass
     inputs:
       terraform_version:
@@ -36,10 +36,14 @@ jobs:
       - uses: hashicorp/setup-terraform@main
         with:
           terraform_version: ${{ inputs.terraform_version }}
-      
+
       - name: Change to working directory
         run: cd ${{ inputs.working_directory }}
         shell: bash
+
+      - name: terraform init
+        run: terraform init
+        working-directory: ${{ inputs.working_directory }}
 
       - name: terraform fmt
         run: terraform fmt -check=true

@@ -135,3 +135,13 @@ repos:
               migrations/.*|
               tests/.*
           )$
+
+  - repo: https://github.com/crate-ci/typos
+    rev: v1.38.1
+    hooks:
+      - id: typos
+        args: []
+        stages: [pre-commit]
+      - id: typos
+        name: commit-msg-typos
+        stages: [commit-msg]  

@@ -1,47 +1,132 @@
-name: Node CI
+name: Reusable Node.js CI
+# Complete CI workflow for Node.js projects supporting both bun and pnpm
+# Runs: setup → lint → typecheck → test → build → audit
+# Uploads coverage and build artifacts
 
 on:
-  push:
-    branches: [main, master]
-  pull_request:
-    branches: [main, master]
-    types: [opened, reopened, synchronize, labeled]
-  workflow_dispatch:
+  workflow_call:
+    inputs:
+      package-manager:
+        description: 'Package manager to use (bun or pnpm)'
+        required: true
+        type: string
+
 jobs:
-  lint-test:
+  ci:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout commit
+      - name: 📥 Checkout commit
         uses: actions/checkout@v6
         with:
           fetch-depth: 0
 
-      - name: Read .nvmrc
-        run: echo ::set-output name=NODE_VERSION::$(cat .nvmrc)
+      - name: 📄 Read .nvmrc if exists
         id: nvm
+        run: |
+          if [ -f .nvmrc ]; then
+            echo "NODE_VERSION=$(cat .nvmrc)" >> $GITHUB_OUTPUT
+          else
+            echo "NODE_VERSION=24" >> $GITHUB_OUTPUT
+          fi
 
-      - name: Use Node.js ${{ steps.nvm.outputs.NODE_VERSION }}
+      - name: 🔧 Setup Node.js
+        if: inputs.package-manager == 'pnpm'
         uses: actions/setup-node@v6
         with:
           node-version: ${{ steps.nvm.outputs.NODE_VERSION }}
+          cache: 'pnpm'
 
-      - name: Install pnpm
-        uses: pnpm/action-setup@v4.1.0
+      - name: 📦 Setup pnpm
+        if: inputs.package-manager == 'pnpm'
+        uses: pnpm/action-setup@v4
+        with:
+          version: latest
 
-      - name: Install Dependencies
-        run: pnpm install
+      - name: 🍞 Setup bun
+        if: inputs.package-manager == 'bun'
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
 
-      - name: Run linter
-        run: pnpm lint
+      - name: 📦 Install dependencies
+        run: |
+          if [ "${{ inputs.package-manager }}" == "pnpm" ]; then
+            pnpm install --frozen-lockfile
+          else
+            bun install --frozen-lockfile
+          fi
 
-      - name: Run typechecker
-        run: yarn typecheck
+      - name: 🔍 Run lint
+        run: |
+          if [ "${{ inputs.package-manager }}" == "pnpm" ]; then
+            pnpm lint
+          else
+            bun run lint
+          fi
 
-      - name: Run tests
-        run: pnpm test
+      - name: ✅ Check formatting
+        if: inputs.package-manager == 'pnpm'
+        run: pnpm format:check
 
-      - name: Audit packages
-        run: pnpm audit --audit-level=moderate
+      - name: ✅ Run Knip
+        if: inputs.package-manager == 'pnpm'
+        run: pnpm knip
 
-      - name: Build
-        run: pnpm build
+      - name: 🔐 Run typecheck
+        run: |
+          if [ "${{ inputs.package-manager }}" == "pnpm" ]; then
+            pnpm typecheck
+          else
+            bun run typecheck
+          fi
+
+      - name: 🧪 Run tests
+        run: |
+          if [ "${{ inputs.package-manager }}" == "pnpm" ]; then
+            pnpm test --coverage
+          else
+            bun test --coverage
+          fi
+
+      - name: 📊 Upload coverage reports
+        if: success() || failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report-${{ inputs.package-manager }}
+          path: |
+            coverage/
+            *.coverage
+            .coverage
+          retention-days: 7
+
+      - name: 🏗️ Run build
+        run: |
+          if [ "${{ inputs.package-manager }}" == "pnpm" ]; then
+            pnpm build
+          else
+            bun run build
+          fi
+
+      - name: 📤 Upload build artifacts
+        if: success() || failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-artifacts-${{ inputs.package-manager }}
+          path: |
+            dist/
+            build/
+            .next/
+            out/
+          retention-days: 7
+
+      - name: 🔍 Check for duplicate code
+        if: inputs.package-manager == 'bun'
+        run: bunx jscpd src/ lib/
+
+      - name: 🔒 Run security audit
+        run: |
+          if [ "${{ inputs.package-manager }}" == "pnpm" ]; then
+            pnpm audit --audit-level=moderate
+          else
+            bun pm audit --moderate
+          fi

@@ -1,5 +1,32 @@
-name: Auto-merge Dependabot PR
-on: pull_request_target
+name: Reusable Auto-merge Dependabot PR
+
+on:
+  workflow_call:
+    inputs:
+      merge-strategy:
+        description: 'Merge strategy to use (merge, squash, rebase)'
+        required: false
+        default: 'merge'
+        type: string
+      require-approval:
+        description: 'Whether to approve the PR before merging'
+        required: false
+        default: true
+        type: boolean
+      auto-merge-dev-deps:
+        description: 'Auto-merge only dev dependencies'
+        required: false
+        default: true
+        type: boolean
+      dependabot-actor:
+        description: 'GitHub actor to check for Dependabot'
+        required: false
+        default: 'dependabot[bot]'
+        type: string
+    secrets:
+      github-token:
+        description: 'GitHub token for PR operations'
+        required: false
 
 permissions:
   contents: write
@@ -7,16 +34,17 @@ permissions:
 
 jobs:
   auto-merge-dependabot-pr:
-    if: github.actor == 'dependabot[bot]'
+    if: github.actor == inputs.dependabot-actor
     runs-on: ubuntu-latest
     env:
       PR_URL: ${{ github.event.pull_request.html_url }}
-      GITHUB_TOKEN: ${{ github.token }}
+      GITHUB_TOKEN: ${{ secrets.github-token || github.token }}
 
     steps:
       - name: Approve Dependabot PR
-        run: gh pr review --approve $PR_URL
+        if: inputs.require-approval
+        run: gh pr review --approve "$PR_URL"
 
       - name: Auto-merge Dependabot PR
-        if: contains(github.event.pull_request.title, 'deps-dev')
-        run: gh pr merge --auto --merge $PR_URL
+        if: ${{ !inputs.auto-merge-dev-deps || contains(github.event.pull_request.title, 'deps-dev') }}
+        run: gh pr merge --auto --${{ inputs.merge-strategy }} "$PR_URL"

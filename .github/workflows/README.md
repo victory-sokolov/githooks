@@ -1,10 +1,15 @@
-# Reusable Node.js CI Workflows
+# Reusable GitHub Actions Workflows
 
-This repository contains reusable GitHub Actions workflows for Node.js projects that support both **bun** and **pnpm** package managers.
+This repository contains reusable GitHub Actions workflows for various automation tasks including Node.js CI and Dependabot PR management.
+
+## 📋 Available Workflows
+
+### 1. **Node.js CI Workflow** - For Node.js projects with bun/pnpm support
+### 2. **Auto-merge Dependabot PR Workflow** - For automated Dependabot PR management
 
 ## 🚀 Quick Start
 
-### Using the Reusable Workflow
+### Node.js CI Workflow
 
 Add this to your `.github/workflows/ci.yml` file:
 
@@ -24,9 +29,31 @@ jobs:
       package-manager: 'pnpm'  # or 'bun'
 ```
 
-## 📋 What This CI Runs
+### Auto-merge Dependabot PR Workflow
 
-The reusable workflow automatically runs the following steps:
+Add this to your `.github/workflows/auto-merge-dependabot.yml` file:
+
+```yaml
+name: Auto-merge Dependabot PR
+
+on:
+  pull_request_target:
+    types: [opened, synchronize]
+
+jobs:
+  auto-merge-dependabot:
+    uses: victory-sokolov/githooks/.github/workflows/auto-merge-dependabot-pr.yml@main
+    with:
+      merge-strategy: 'squash'
+      require-approval: true
+      auto-merge-dev-deps: true
+    secrets:
+      github-token: ${{ secrets.GITHUB_TOKEN }}
+```
+
+## 📋 Node.js CI Workflow Details
+
+The Node.js CI workflow automatically runs the following steps:
 
 ### 1. **Environment Setup**
 - Checks out your repository
@@ -52,6 +79,76 @@ The reusable workflow automatically runs the following steps:
 ### 5. **Security**
 - Runs security audit: `pnpm audit --audit-level=moderate` or `bun pm audit --moderate`
 
+## 🤖 Auto-merge Dependabot PR Workflow
+
+Automatically approves and merges Dependabot PRs based on configurable criteria.
+
+### 🔧 Configuration Options
+
+| Input | Description | Default | Required |
+|-------|-------------|---------|----------|
+| `merge-strategy` | Merge strategy: `merge`, `squash`, or `rebase` | `merge` | No |
+| `require-approval` | Whether to approve the PR before merging | `true` | No |
+| `auto-merge-dev-deps` | Only auto-merge dev dependencies | `true` | No |
+| `dependabot-actor` | GitHub actor to check for Dependabot | `dependabot[bot]` | No |
+| `github-token` | GitHub token for PR operations | `${{ github.token }}` | No |
+
+### 📋 Usage Examples
+
+#### Basic Usage
+```yaml
+jobs:
+  auto-merge-dependabot:
+    uses: victory-sokolov/githooks/.github/workflows/auto-merge-dependabot-pr.yml@main
+```
+
+#### Advanced Configuration
+```yaml
+jobs:
+  auto-merge-dependabot:
+    uses: victory-sokolov/githooks/.github/workflows/auto-merge-dependabot-pr.yml@main
+    with:
+      merge-strategy: 'squash'
+      require-approval: true
+      auto-merge-dev-deps: false  # Merge all dependency updates
+    secrets:
+      github-token: ${{ secrets.GITHUB_TOKEN }}
+```
+
+#### Production Repository (More Restrictive)
+```yaml
+jobs:
+  auto-merge-dependabot:
+    uses: victory-sokolov/githooks/.github/workflows/auto-merge-dependabot-pr.yml@main
+    with:
+      merge-strategy: 'merge'
+      require-approval: true
+      auto-merge-dev-deps: true  # Only dev dependencies
+```
+
+### 🔒 Required Permissions
+
+The workflow requires these permissions:
+```yaml
+permissions:
+  contents: write
+  pull-requests: write
+```
+
+### 🎯 How It Works
+
+1. **Actor Check**: Verifies the PR was created by Dependabot
+2. **Approval**: Optionally approves the PR (if `require-approval: true`)
+3. **Filtering**: Optionally filters for dev dependencies only
+4. **Auto-merge**: Enables auto-merge with specified strategy
+
+### ⚠️ Important Notes
+
+- The workflow uses `pull_request_target` event for proper token permissions
+- Auto-merge must be enabled in repository settings
+- The workflow will only merge if all required checks pass
+- Consider using branch protection rules for additional safety
+
 ## 📦 Package Manager Examples
 
 ### Using pnpm
@@ -74,9 +171,10 @@ jobs:
 
 ## 🔧 Requirements
 
+### For Node.js CI
 Your project should have these scripts in `package.json`:
 
-### For pnpm projects:
+#### For pnpm projects:
 ```json
 {
   "scripts": {
@@ -90,7 +188,7 @@ Your project should have these scripts in `package.json`:
 }
 ```
 
-### For bun projects:
+#### For bun projects:
 ```json
 {
   "scripts": {
@@ -105,16 +203,25 @@ Your project should have these scripts in `package.json`:
 }
 ```
 
+### For Auto-merge Dependabot
+- Repository must have auto-merge enabled in settings
+- Dependabot must be configured for the repository
+- Consider using branch protection rules
+
 ## 📁 Artifacts
 
-The workflow uploads two types of artifacts:
+The Node.js CI workflow uploads two types of artifacts:
 
 1. **Coverage Reports**: Available in the Actions tab under "coverage-report-{package-manager}"
 2. **Build Artifacts**: Available in the Actions tab under "build-artifacts-{package-manager}"
 
 ## 🔄 Workflow Triggers
 
-The workflow runs on:
+### Node.js CI
 - Push to `main` or `master` branches
 - Pull requests to `main` or `master` branches
 - Manual workflow dispatch
+
+### Auto-merge Dependabot PR
+- Pull request events from Dependabot
+- Manual workflow dispatch (if configured)

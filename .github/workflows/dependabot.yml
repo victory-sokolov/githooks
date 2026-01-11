@@ -1,4 +1,4 @@
-name: Reusable Auto-merge Dependabot PR
+name: Auto-merge Dependabot PR
 
 on:
   workflow_call:

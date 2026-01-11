@@ -65,12 +65,20 @@ jobs:
           fi
 
       - name: ✅ Check formatting
-        if: inputs.package-manager == 'pnpm'
-        run: pnpm format:check
+        run: |
+          if [ "${{ inputs.package-manager }}" == "pnpm" ]; then
+            pnpm format:check
+          else
+            bun run format:check
+          fi
 
       - name: ✅ Run Knip
-        if: inputs.package-manager == 'pnpm'
-        run: pnpm knip
+        run: |
+          if [ "${{ inputs.package-manager }}" == "pnpm" ]; then
+            pnpm knip
+          else
+            bunx knip
+          fi
 
       - name: 🔐 Run typecheck
         run: |
@@ -120,13 +128,17 @@ jobs:
           retention-days: 7
 
       - name: 🔍 Check for duplicate code
-        if: inputs.package-manager == 'bun'
-        run: bunx jscpd src/ lib/
+        run: |
+          if [ "${{ inputs.package-manager }}" == "pnpm" ]; then
+            pnpm jscpd
+          else
+            bunx jscpd
+          fi
 
       - name: 🔒 Run security audit
         run: |
           if [ "${{ inputs.package-manager }}" == "pnpm" ]; then
             pnpm audit --audit-level=moderate
           else
-            bun pm audit --moderate
+            bun audit --moderate
           fi

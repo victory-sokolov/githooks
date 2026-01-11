@@ -1,2 +1,117 @@
 # Git Hooks
 Git hooks collection
+
+## Available Git Hooks
+
+This repository contains various Git hooks that can be used to enforce development practices and automate tasks.
+
+### Client-Side Hooks
+
+#### `pre-commit`
+- **Purpose**: Prevents accidental commits to protected branches and detects debug code.
+- **Features**:
+  - Blocks commits directly to the `master` branch
+  - Scans for `!nocommit` comments in commit messages and aborts if found
+- **Usage**: Copy to `.git/hooks/pre-commit` and make executable
+
+#### `pre-push`
+- **Purpose**: Prevents pushing to protected branches.
+- **Features**:
+  - Blocks pushes to `master` or `develop` branches
+- **Usage**: Copy to `.git/hooks/pre-push` and make executable
+
+### Server-Side Hooks
+
+#### `post_merge_hook.sh`
+- **Purpose**: Handles post-merge operations for specific project types.
+- **Features**:
+  - Warns about changes to `composer.lock` or `parameters.yml.dist`
+  - Automatically runs `composer install` if lock files changed
+  - Warns about new Doctrine migrations
+- **Usage**: Copy to `.git/hooks/post-merge` and make executable
+
+### Husky Hooks
+
+#### `husky/post-merge`
+- **Purpose**: Manages Node.js dependencies after merges.
+- **Features**:
+  - Detects changes to `package-lock.json` files (supports mono-repos)
+  - Automatically runs `npm install` in affected directories
+- **Usage**: Used with Husky for Git hooks management
+
+## GitHub Actions Workflows
+
+This repository provides reusable GitHub Actions workflows for common CI/CD tasks.
+
+### Reusable Workflows
+
+#### `node-ci.yml`
+- **Purpose**: Comprehensive CI pipeline for Node.js projects
+- **Features**:
+  - Supports pnpm and bun package managers
+  - Environment setup with Node.js version detection
+  - Code quality checks (linting, formatting, type checking)
+  - Testing with coverage reports
+  - Build process with artifact uploads
+  - Security auditing
+- **Inputs**: `package-manager` (pnpm/bun)
+
+#### `dependabot.yml` (Auto-merge Dependabot PR)
+- **Purpose**: Automatically merges Dependabot pull requests
+- **Features**:
+  - Configurable merge strategies (merge, squash, rebase)
+  - Optional PR approval
+  - Filtering for dev dependencies only
+- **Inputs**: `merge-strategy`, `require-approval`, `auto-merge-dev-deps`
+
+### Example/Template Workflows
+
+#### `code-review.yml`
+- **Purpose**: Automated code review using ReviewDog
+- **Trigger**: Manual dispatch
+
+#### `codeql.yml`
+- **Purpose**: Security analysis with GitHub CodeQL
+- **Trigger**: Push/PR to main branch
+
+#### `create-tag-from-version-txt.yml`
+- **Purpose**: Creates Git tags from VERSION.txt file changes
+- **Trigger**: Workflow dispatch or successful CI on master
+
+#### `lighthouse.yml`
+- **Purpose**: Performance testing with Lighthouse CI
+- **Trigger**: PR events on main/master
+
+#### `merge-schedule.yml`
+- **Purpose**: Scheduled merging of pull requests
+- **Trigger**: PR events (with optional cron schedule)
+
+#### `npm-release.yml`
+- **Purpose**: Automated NPM package releases
+- **Trigger**: After successful CI workflow
+
+#### `postgres-service.yml`
+- **Purpose**: CI with PostgreSQL service
+- **Trigger**: Manual dispatch (can be configured for push/PR)
+
+#### `selenium.yml`
+- **Purpose**: End-to-end testing with Selenium
+- **Trigger**: Manual dispatch
+
+#### `terraform.yml`
+- **Purpose**: Terraform code quality checks
+- **Trigger**: Push to non-main branches or workflow call
+
+## GitHub Actions
+
+### Composite Actions
+
+#### `python-poetry.yml`
+- **Purpose**: Sets up Python environment with Poetry
+- **Features**:
+  - Installs Python 3.12.5
+  - Validates pyproject.toml
+  - Installs Poetry
+  - Caches virtual environment
+  - Installs dependencies
+- **Usage**: Call in workflow steps for Python projects using Poetry

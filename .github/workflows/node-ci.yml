@@ -56,7 +56,29 @@ jobs:
             bun install --frozen-lockfile
           fi
 
+      - name: Check available scripts
+        id: scripts
+        run: |
+          node -e "
+          const fs = require('fs');
+          try {
+            const pkg = JSON.parse(fs.readFileSync('package.json', 'utf8'));
+            const scripts = pkg.scripts || {};
+            ['lint', 'format:check', 'typecheck', 'test', 'build', 'jscpd', 'knip'].forEach(s => {
+              const outputName = s.replace(/:/g, '_');
+              console.log(outputName + '=' + (scripts[s] ? 'true' : 'false'));
+            });
+          } catch (e) {
+            ['lint', 'format:check', 'typecheck', 'test', 'build', 'jscpd', 'knip'].forEach(s => {
+              const outputName = s.replace(/:/g, '_');
+              console.log(outputName + '=false');
+            });
+          }
+          " >> $GITHUB_OUTPUT
+          echo "has_src_lib=$([ -d src ] || [ -d lib ] && echo 'true' || echo 'false')" >> $GITHUB_OUTPUT
+
       - name: 🔍 Run lint
+        if: steps.scripts.outputs.lint == 'true'
         run: |
           if [ "${{ inputs.package-manager }}" == "pnpm" ]; then
             pnpm lint
@@ -65,6 +87,7 @@ jobs:
           fi
 
       - name: ✅ Check formatting
+        if: steps.scripts.outputs.format_check == 'true'
         run: |
           if [ "${{ inputs.package-manager }}" == "pnpm" ]; then
             pnpm format:check
@@ -72,6 +95,7 @@ jobs:
             bun run format:check
           fi
       - name: 🔐 Run typecheck
+        if: steps.scripts.outputs.typecheck == 'true'
         run: |
           if [ "${{ inputs.package-manager }}" == "pnpm" ]; then
             pnpm typecheck
@@ -80,6 +104,7 @@ jobs:
           fi
 
       - name: 🧪 Run tests
+        if: steps.scripts.outputs.test == 'true'
         run: |
           if [ "${{ inputs.package-manager }}" == "pnpm" ]; then
             pnpm test --coverage
@@ -99,6 +124,7 @@ jobs:
           retention-days: 7
 
       - name: 🏗️ Run build
+        if: steps.scripts.outputs.build == 'true'
         run: |
           if [ "${{ inputs.package-manager }}" == "pnpm" ]; then
             pnpm build
@@ -119,6 +145,7 @@ jobs:
           retention-days: 7
 
       - name: 🔍 Check for duplicate code
+        if: steps.scripts.outputs.jscpd == 'true'
         run: |
           if [ "${{ inputs.package-manager }}" == "pnpm" ]; then
             pnpm jscpd
@@ -127,6 +154,7 @@ jobs:
           fi
 
       - name: ✅ Run Knip
+        if: steps.scripts.outputs.knip == 'true'
         run: |
           if [ "${{ inputs.package-manager }}" == "pnpm" ]; then
             pnpm knip

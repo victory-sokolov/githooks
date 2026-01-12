@@ -56,6 +56,25 @@ This repository provides reusable GitHub Actions workflows for common CI/CD task
   - Security auditing
 - **Inputs**: `package-manager` (pnpm/bun)
 
+#### `playwright-e2e.yml`
+- **Purpose**: Run Playwright end-to-end tests
+- **Features**:
+  - Node.js environment setup
+  - Automatic Playwright browser installation
+  - Configurable test commands
+  - Test report artifact upload
+- **Inputs**: `node-version`, `playwright-version`, `test-command`, `working-directory`
+- **Usage Example**:
+  ```yaml
+  jobs:
+    e2e-tests:
+      uses: your-org/githooks/.github/workflows/playwright-e2e.yml@main
+      with:
+        node-version: '20'
+        test-command: 'npm run test:e2e'
+        working-directory: './e2e'
+  ```
+
 #### `dependabot.yml` (Auto-merge Dependabot PR)
 - **Purpose**: Automatically merges Dependabot pull requests
 - **Features**:
@@ -63,6 +82,28 @@ This repository provides reusable GitHub Actions workflows for common CI/CD task
   - Optional PR approval
   - Filtering for dev dependencies only
 - **Inputs**: `merge-strategy`, `require-approval`, `auto-merge-dev-deps`
+
+#### `reusable-nextjs.yml`
+- **Purpose**: Reusable workflow for building and exporting Next.js applications
+- **Features**:
+  - Sets up Node.js environment (defaults to latest LTS)
+  - Supports npm, pnpm, and bun package managers
+  - Installs dependencies with frozen lockfile
+  - Builds the Next.js app
+  - Runs tests (if available)
+  - Exports the app for static deployment
+  - Uploads build artifacts
+- **Inputs**: `node-version` (optional, defaults to 'lts'), `working-directory` (optional, defaults to '.'), `package-manager` (optional, defaults to 'npm')
+- **Usage Example**:
+  ```yaml
+  jobs:
+    build:
+      uses: your-org/githooks/.github/workflows/reusable-nextjs.yml@main
+      with:
+        node-version: '20'
+        package-manager: 'pnpm'
+        working-directory: './nextjs-app'
+  ```
 
 ### Example/Template Workflows
 

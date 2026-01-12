@@ -1,0 +1,60 @@
+name: Playwright E2E Tests
+# Reusable workflow for running Playwright end-to-end tests
+# Installs dependencies, sets up Playwright browsers, and runs tests
+
+on:
+  workflow_call:
+    inputs:
+      node-version:
+        description: 'Node.js version to use'
+        required: false
+        default: 'lts'
+        type: string
+      playwright-version:
+        description: 'Playwright version to install'
+        required: false
+        default: 'latest'
+        type: string
+      test-command:
+        description: 'Command to run Playwright tests'
+        required: false
+        default: 'npx playwright test'
+        type: string
+      working-directory:
+        description: 'Working directory for the tests'
+        required: false
+        default: '.'
+        type: string
+
+jobs:
+  e2e:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ${{ inputs.working-directory }}
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v6
+
+      - name: 🔧 Setup Node.js
+        uses: actions/setup-node@v6.1.0
+        with:
+          node-version: ${{ inputs.node-version }}
+          cache: 'npm'
+
+      - name: 📦 Install dependencies
+        run: npm ci
+
+      - name: 🎭 Install Playwright browsers
+        run: npx playwright@${{ inputs.playwright-version }} install --with-deps
+
+      - name: 🧪 Run Playwright tests
+        run: ${{ inputs.test-command }}
+
+      - name: 📊 Upload test results
+        uses: actions/upload-artifact@v6
+        if: always()
+        with:
+          name: playwright-report
+          path: ${{ inputs.working-directory }}/playwright-report/
+          retention-days: 30

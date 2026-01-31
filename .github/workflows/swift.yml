@@ -1,31 +1,54 @@
 name: Swift CI
 
 on:
-    workflow_call:
+  workflow_call:
+    inputs:
+      project_name:
+        description: 'Xcode project name (without .xcodeproj)'
+        required: true
+        type: string
+      platform:
+        description: 'Target platform'
+        required: false
+        default: 'macOS'
+        type: string
 
 concurrency:
-    group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
-    cancel-in-progress: true
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
 
 jobs:
-    lint:
-        runs-on: macos-26
+  lint:
+    runs-on: macos-26
 
-        steps:
-            - name: Checkout code
-              uses: actions/checkout@v6
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
 
-            - name: Install SwiftLint
-              run: brew install swiftlint
+      - name: Install SwiftLint
+        run: brew install swiftlint
 
-            - name: Install SwiftFormat
-              run: brew install swiftformat
+      - name: Install SwiftFormat
+        run: brew install swiftformat
 
-            - name: Install xcbeautify
-              run: brew install xcbeautify
+      - name: Run SwiftLint
+        run: swiftlint lint --strict
 
-            - name: Run SwiftLint
-              run: swiftlint lint --strict
+      - name: Run SwiftFormat lint
+        run: swiftformat --dryrun --config .swiftformat .
 
-            - name: Run SwiftFormat lint
-              run: swiftformat --dryrun --config .swiftformat .
+  build_and_test:
+    runs-on: macos-26
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Install xcbeautify
+        run: brew install xcbeautify
+
+      - name: Build for simulator
+        run: set -o pipefail && xcodebuild -project ${{ inputs.project_name }}.xcodeproj -scheme ${{ inputs.project_name }} -configuration Debug -destination 'generic/platform=${{ inputs.platform }}' build OTHER_SWIFT_FLAGS="-Xfrontend -strict-concurrency=complete" CODE_SIGNING_ALLOWED=NO | xcbeautify
+
+      - name: Run tests
+        run: set -o pipefail && xcodebuild -project ${{ inputs.project_name }}.xcodeproj -scheme ${{ inputs.project_name }} -destination 'generic/platform=${{ inputs.platform }}' test OTHER_SWIFT_FLAGS="-Xfrontend -strict-concurrency=complete" CODE_SIGNING_ALLOWED=NO | xcbeautify

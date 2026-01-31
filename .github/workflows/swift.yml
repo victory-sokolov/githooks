@@ -1,0 +1,28 @@
+name: Swift CI
+
+on:
+  workflow_call:
+
+jobs:
+  lint:
+    runs-on: macos-26
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Install SwiftLint
+        run: brew install swiftlint
+
+      - name: Install SwiftFormat
+        run: brew install swiftformat
+
+      - name: Run SwiftLint
+        run: swiftlint lint --strict
+
+      - name: Run SwiftFormat lint
+        run: swiftformat --dryrun --config .swiftformat .
+
+      - name: Run concurrency pattern checks
+        run: ./scripts/check-concurrency.sh
+        continue-on-error: true

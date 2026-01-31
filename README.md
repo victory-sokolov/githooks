@@ -105,6 +105,21 @@ This repository provides reusable GitHub Actions workflows for common CI/CD task
         working-directory: './nextjs-app'
   ```
 
+#### `swift.yml`
+- **Purpose**: Swift code linting and quality checks
+- **Features**:
+  - Installs SwiftLint and SwiftFormat
+  - Runs linting with SwiftLint
+  - Checks code formatting with SwiftFormat
+  - Runs concurrency pattern checks
+- **Inputs**: None
+- **Usage Example**:
+  ```yaml
+  jobs:
+    swift-lint:
+      uses: your-org/githooks/.github/workflows/swift.yml@main
+  ```
+
 ### Example/Template Workflows
 
 #### `code-review.yml`

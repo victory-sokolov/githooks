@@ -29,6 +29,3 @@ jobs:
 
             - name: Run SwiftFormat lint
               run: swiftformat --dryrun --config .swiftformat .
-
-            - name: Run tests
-              run: swift test

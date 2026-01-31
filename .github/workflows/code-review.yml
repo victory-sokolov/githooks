@@ -3,6 +3,10 @@ name: Automatic code review
 on:
     workflow_dispatch:
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
 jobs:
   code-review:
     runs-on: ubuntu-latest

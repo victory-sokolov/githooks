@@ -19,6 +19,10 @@ on:
         default: 'npm'
         type: string
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
 jobs:
   build-and-export:
     runs-on: ubuntu-latest

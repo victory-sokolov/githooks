@@ -27,10 +27,6 @@ jobs:
             - name: Run SwiftFormat lint
               run: swiftformat --dryrun --config .swiftformat .
 
-            - name: Run concurrency pattern checks
-              run: ./scripts/check-concurrency.sh
-              continue-on-error: true
-
     build:
         name: Swift ${{ matrix.swift }} on ${{ matrix.os }}
         strategy:

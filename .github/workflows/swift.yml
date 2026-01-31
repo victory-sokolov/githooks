@@ -1,32 +1,49 @@
 name: Swift CI
 
 on:
-  workflow_call:
+    workflow_call:
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
-  cancel-in-progress: true
+    group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+    cancel-in-progress: true
 
 jobs:
-  lint:
-    runs-on: macos-26
+    lint:
+        runs-on: macos-26
 
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v6
+        steps:
+            - name: Checkout code
+              uses: actions/checkout@v6
 
-      - name: Install SwiftLint
-        run: brew install swiftlint
+            - name: Install SwiftLint
+              run: brew install swiftlint
 
-      - name: Install SwiftFormat
-        run: brew install swiftformat
+            - name: Install SwiftFormat
+              run: brew install swiftformat
 
-      - name: Run SwiftLint
-        run: swiftlint lint --strict
+            - name: Run SwiftLint
+              run: swiftlint lint --strict
 
-      - name: Run SwiftFormat lint
-        run: swiftformat --dryrun --config .swiftformat .
+            - name: Run SwiftFormat lint
+              run: swiftformat --dryrun --config .swiftformat .
 
-      - name: Run concurrency pattern checks
-        run: ./scripts/check-concurrency.sh
-        continue-on-error: true
+            - name: Run concurrency pattern checks
+              run: ./scripts/check-concurrency.sh
+              continue-on-error: true
+
+    build:
+        name: Swift ${{ matrix.swift }} on ${{ matrix.os }}
+        strategy:
+            matrix:
+                os: [macos-latest]
+                swift: ['6.2']
+        runs-on: ${{ matrix.os }}
+        steps:
+            - uses: swift-actions/setup-swift@65540b95f51493d65f5e59e97dcef9629ddf11bf
+              with:
+                  swift-version: ${{ matrix.swift }}
+            - uses: actions/checkout@v6
+            - name: Build
+              run: swift build
+            - name: Run tests
+              run: swift test

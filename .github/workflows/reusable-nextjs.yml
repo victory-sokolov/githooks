@@ -95,7 +95,7 @@ jobs:
         # Note: 'next export' is deprecated in Next.js 13+. For static export, configure output: 'export' in next.config.js and use 'next build' instead.
 
       - name: Upload build artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: nextjs-build
           path: ${{ inputs.working-directory }}/out/

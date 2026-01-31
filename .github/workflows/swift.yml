@@ -27,19 +27,6 @@ jobs:
             - name: Run SwiftFormat lint
               run: swiftformat --dryrun --config .swiftformat .
 
-    build:
-        name: Swift test and build ${{ matrix.swift }} on ${{ matrix.os }}
-        strategy:
-            matrix:
-                os: [macos-latest]
-                swift: ['6.0']
-        runs-on: ${{ matrix.os }}
-        steps:
-            - uses: swift-actions/setup-swift@v3
-              with:
-                  swift-version: ${{ matrix.swift }}
-            - uses: actions/checkout@v6
-            - name: Build
-              run: swift build
             - name: Run tests
               run: swift test
+

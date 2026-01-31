@@ -106,17 +106,19 @@ This repository provides reusable GitHub Actions workflows for common CI/CD task
   ```
 
 #### `swift.yml`
-- **Purpose**: Swift code linting and quality checks
+- **Purpose**: Swift code linting, building, and testing
 - **Features**:
   - Installs SwiftLint and SwiftFormat
   - Runs linting with SwiftLint
   - Checks code formatting with SwiftFormat
   - Runs concurrency pattern checks
+  - Builds Swift projects with `swift build`
+  - Runs tests with `swift test`
 - **Inputs**: None
 - **Usage Example**:
   ```yaml
   jobs:
-    swift-lint:
+    swift-ci:
       uses: your-org/githooks/.github/workflows/swift.yml@main
   ```
 

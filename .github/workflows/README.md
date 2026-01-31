@@ -6,6 +6,7 @@ This repository contains reusable GitHub Actions workflows for various automatio
 
 ### 1. **Node.js CI Workflow** - For Node.js projects with bun/pnpm support
 ### 2. **Auto-merge Dependabot PR Workflow** - For automated Dependabot PR management
+### 3. **Swift CI Workflow** - For Swift projects with linting, building, and testing
 
 ## 🚀 Quick Start
 
@@ -148,6 +149,45 @@ permissions:
 - Auto-merge must be enabled in repository settings
 - The workflow will only merge if all required checks pass
 - Consider using branch protection rules for additional safety
+
+## 🏗️ Swift CI Workflow
+
+The Swift CI workflow automatically runs linting, building, and testing for Swift projects.
+
+### 🔧 Configuration Options
+
+This workflow has no inputs; it runs on macOS with Swift 6.2.
+
+### 📋 Usage Example
+
+Add this to your `.github/workflows/swift-ci.yml` file:
+
+```yaml
+name: Swift CI
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+
+jobs:
+  swift-ci:
+    uses: victory-sokolov/githooks/.github/workflows/swift.yml@main
+```
+
+### 🎯 What It Does
+
+1. **Linting**: Installs and runs SwiftLint for code style checks
+2. **Formatting Check**: Installs and runs SwiftFormat to check code formatting
+3. **Concurrency Checks**: Runs custom concurrency pattern checks
+4. **Building**: Sets up Swift 6.2 and builds the project
+5. **Testing**: Runs the test suite
+
+### ⚠️ Requirements
+
+- Your repository must contain Swift code (Package.swift or .swift files)
+- macOS runners are used for compatibility with Swift tools
 
 ## 📦 Package Manager Examples
 

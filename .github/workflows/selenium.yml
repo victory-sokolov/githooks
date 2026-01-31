@@ -12,12 +12,23 @@ jobs:
         runs-on: ubuntu-latest
 
         steps:
-            - uses: actions/checkout@master
+            - uses: actions/checkout@v6
+              with:
+                ref: ${{ github.event.pull_request.head.sha || github.sha }}
 
             - name: Set up Python
-              uses: actions/setup-python@master
+              uses: actions/setup-python@v5
               with:
                   python-version: "3.12.7"
+                  cache: 'pip'
+
+            - name: Cache pip dependencies
+              uses: actions/cache@v4
+              with:
+                path: ~/.cache/pip
+                key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+                restore-keys: |
+                  ${{ runner.os }}-pip-
 
             - name: Install dependencies
               run: |

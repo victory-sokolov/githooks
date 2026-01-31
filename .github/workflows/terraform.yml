@@ -33,17 +33,24 @@ jobs:
       contents: read
       pull-requests: write
     steps:
-      - uses: actions/checkout@master
+      - uses: actions/checkout@v6
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+      - name: Cache Terraform plugins
+        uses: actions/cache@v4
+        with:
+          path: ~/.terraform.d/plugin-cache
+          key: ${{ runner.os }}-terraform-${{ hashFiles('**/.terraform.lock.hcl') }}
+          restore-keys: |
+            ${{ runner.os }}-terraform-
       - name: terraform fmt
         uses: dflook/terraform-fmt-check@v2
         with:
           path: ${{ inputs.working_directory }}
-
       - name: terraform validate
         uses: dflook/terraform-validate@v2
         with:
           path: ${{ inputs.working_directory }}
-
       - name: terraform plan
         uses: dflook/terraform-plan@v2
         with:

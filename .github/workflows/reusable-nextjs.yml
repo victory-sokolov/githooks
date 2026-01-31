@@ -33,12 +33,29 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v6
 
+      - name: Read .nvmrc if exists
+        id: nvm
+        run: |
+          if [ -f .nvmrc ]; then
+            echo "NODE_VERSION=$(cat .nvmrc)" >> $GITHUB_OUTPUT
+          else
+            echo "NODE_VERSION=lts" >> $GITHUB_OUTPUT
+          fi
+
       - name: Setup Node.js
         uses: actions/setup-node@v6.1.0
         with:
-          node-version: ${{ inputs.node-version }}
+          node-version: ${{ steps.nvm.outputs.NODE_VERSION }}
           cache: ${{ inputs.package-manager != 'bun' && inputs.package-manager || '' }}
           cache-dependency-path: ${{ inputs.working-directory }}/${{ inputs.package-manager == 'pnpm' && 'pnpm-lock.yaml' || inputs.package-manager == 'bun' && 'bun.lockb' || 'package-lock.json' }}
+
+      - name: Cache Next.js build outputs
+        uses: actions/cache@v4
+        with:
+          path: ${{ inputs.working-directory }}/.next/cache
+          key: ${{ runner.os }}-nextjs-${{ hashFiles(format('{0}/package-lock.json', inputs.working-directory)) }}
+          restore-keys: |
+            ${{ runner.os }}-nextjs-
 
       - name: Setup pnpm
         if: inputs.package-manager == 'pnpm'

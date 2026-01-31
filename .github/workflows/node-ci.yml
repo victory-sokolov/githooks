@@ -68,12 +68,12 @@ jobs:
           try {
             const pkg = JSON.parse(fs.readFileSync('package.json', 'utf8'));
             const scripts = pkg.scripts || {};
-            ['lint', 'format:check', 'typecheck', 'test', 'build', 'jscpd', 'knip'].forEach(s => {
+            ['lint', 'format:check', 'typecheck', 'test', 'build', 'jscpd', 'knip', 'audit'].forEach(s => {
               const outputName = s.replace(/:/g, '_');
               console.log(outputName + '=' + (scripts[s] ? 'true' : 'false'));
             });
           } catch (e) {
-            ['lint', 'format:check', 'typecheck', 'test', 'build', 'jscpd', 'knip'].forEach(s => {
+            ['lint', 'format:check', 'typecheck', 'test', 'build', 'jscpd', 'knip', 'audit'].forEach(s => {
               const outputName = s.replace(/:/g, '_');
               console.log(outputName + '=false');
             });
@@ -167,6 +167,7 @@ jobs:
           fi
 
       - name: 🔒 Run security audit
+        if: steps.scripts.outputs.audit == 'true'
         run: |
           if [ "${{ inputs.package-manager }}" == "pnpm" ]; then
             pnpm audit --audit-level=moderate

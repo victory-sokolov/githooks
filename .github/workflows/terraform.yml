@@ -4,6 +4,10 @@ on:
     branches-ignore:
       - main
       - master
+    paths:
+      - '**/*.tf'
+      - '**/*.tfvars'
+      - '.terraform.lock.hcl'
   workflow_call: # This makes it callable from other workflows
     inputs:
       terraform_version:
@@ -23,7 +27,7 @@ concurrency:
 
 jobs:
   tfsec:
-    name:  terraform-code-quality
+    name: terraform-code-quality
     runs-on: ubuntu-latest
     permissions:
       contents: read

@@ -28,7 +28,7 @@ jobs:
               run: swiftformat --dryrun --config .swiftformat .
 
     build:
-        name: Swift ${{ matrix.swift }} on ${{ matrix.os }}
+        name: Swift test and build ${{ matrix.swift }} on ${{ matrix.os }}
         strategy:
             matrix:
                 os: [macos-latest]

@@ -21,6 +21,9 @@ jobs:
             - name: Install SwiftFormat
               run: brew install swiftformat
 
+            - name: Install xcbeautify
+              run: brew install xcbeautify
+
             - name: Run SwiftLint
               run: swiftlint lint --strict
 
@@ -29,4 +32,3 @@ jobs:
 
             - name: Run tests
               run: swift test
-

@@ -84,7 +84,7 @@ jobs:
 
       - name: Determine destination
         id: dest
-        uses: ./.github/actions/determine-dest-swift
+        uses: victory-sokolov/githooks/.github/actions/determine-dest-swift@main
         with:
           platform: ${{ inputs.platform }}
           device: ${{ inputs.device }}
@@ -108,7 +108,7 @@ jobs:
 
       - name: Determine test destination
         id: dest
-        uses: ./.github/actions/determine-dest-swift
+        uses: victory-sokolov/githooks/.github/actions/determine-dest-swift@main
         with:
           platform: ${{ inputs.platform }}
           device: ${{ inputs.device }}
@@ -133,7 +133,7 @@ jobs:
 
       - name: Determine test destination
         id: dest
-        uses: ./.github/actions/determine-dest-swift
+        uses: victory-sokolov/githooks/.github/actions/determine-dest-swift@main
         with:
           platform: ${{ inputs.platform }}
           device: ${{ inputs.device }}

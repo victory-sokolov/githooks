@@ -43,7 +43,7 @@ jobs:
           fi
 
       - name: Setup Node.js
-        uses: actions/setup-node@v6.1.0
+        uses: actions/setup-node@v6.2.0
         with:
           node-version: ${{ steps.nvm.outputs.NODE_VERSION }}
           cache: ${{ inputs.package-manager != 'bun' && inputs.package-manager || '' }}

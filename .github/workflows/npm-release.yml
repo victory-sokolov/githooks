@@ -34,7 +34,7 @@ jobs:
             echo "NODE_VERSION=24" >> $GITHUB_OUTPUT
           fi
       - name: Use Node.js ${{ matrix.node-version }}
-        uses: actions/setup-node@v4.4.0
+        uses: actions/setup-node@v6.2.0
         with:
           node-version: ${{ steps.nvm.outputs.NODE_VERSION }}
           cache: 'npm'

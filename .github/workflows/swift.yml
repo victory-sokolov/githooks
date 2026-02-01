@@ -96,7 +96,7 @@ jobs:
 
       - name: Determine test destination
         id: dest
-        uses: ./.github/actions/determine-dest
+        uses: ./.github/actions/determine-dest-swift
         with:
           platform: ${{ inputs.platform }}
           device: ${{ inputs.device }}
@@ -121,7 +121,7 @@ jobs:
 
       - name: Determine test destination
         id: dest
-        uses: ./.github/actions/determine-dest
+        uses: ./.github/actions/determine-dest-swift
         with:
           platform: ${{ inputs.platform }}
           device: ${{ inputs.device }}

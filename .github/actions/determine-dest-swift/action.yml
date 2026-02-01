@@ -1,4 +1,5 @@
-name: 'Determine Destination'
+name: 'Determine Swift Destination'
+description: 'Determines the destination string for Swift builds based on the target platform and device'
 
 inputs:
   platform:

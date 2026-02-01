@@ -1,0 +1,107 @@
+name: Setup Dependencies with Cache
+description: Detects package manager, sets it up with proper caching, and installs dependencies
+
+inputs:
+  package-manager:
+    description: 'Package manager to use (auto, bun, pnpm, npm, yarn). Auto-detects if not specified.'
+    required: false
+    default: 'auto'
+  node-version:
+    description: 'Node.js version to use (for npm/pnpm/yarn)'
+    required: false
+    default: 'lts/*'
+  bun-version:
+    description: 'Bun version to use'
+    required: false
+    default: 'latest'
+  pnpm-version:
+    description: 'pnpm version to use'
+    required: false
+    default: 'latest'
+  working-directory:
+    description: 'Working directory'
+    required: false
+    default: '.'
+
+
+outputs:
+  package-manager:
+    description: 'The detected/used package manager'
+    value: ${{ steps.detect.outputs.package-manager }}
+
+runs:
+  using: composite
+  steps:
+    - name: Detect package manager
+      id: detect
+      shell: bash
+      working-directory: ${{ inputs.working-directory }}
+      run: |
+        if [ "${{ inputs.package-manager }}" != "auto" ]; then
+          echo "package-manager=${{ inputs.package-manager }}" >> $GITHUB_OUTPUT
+          exit 0
+        fi
+
+        # Auto-detect based on lock files
+        if [ -f "bun.lock" ] || [ -f "bun.lockb" ]; then
+          echo "package-manager=bun" >> $GITHUB_OUTPUT
+        elif [ -f "pnpm-lock.yaml" ]; then
+          echo "package-manager=pnpm" >> $GITHUB_OUTPUT
+        elif [ -f "yarn.lock" ]; then
+          echo "package-manager=yarn" >> $GITHUB_OUTPUT
+        elif [ -f "package-lock.json" ]; then
+          echo "package-manager=npm" >> $GITHUB_OUTPUT
+        else
+          echo "package-manager=npm" >> $GITHUB_OUTPUT
+          echo "::warning::No lock file found, defaulting to npm"
+        fi
+
+    - name: Setup Node.js (npm/pnpm/yarn)
+      if: steps.detect.outputs.package-manager != 'bun'
+      uses: actions/setup-node@v6
+      with:
+        node-version: ${{ inputs.node-version }}
+        cache: ${{ steps.detect.outputs.package-manager }}
+        cache-dependency-path: ${{ inputs.working-directory }}/${{ steps.detect.outputs.package-manager == 'pnpm' && 'pnpm-lock.yaml' || steps.detect.outputs.package-manager == 'yarn' && 'yarn.lock' || 'package-lock.json' }}
+
+    - name: Setup pnpm
+      if: steps.detect.outputs.package-manager == 'pnpm'
+      uses: pnpm/action-setup@v4
+      with:
+        version: ${{ inputs.pnpm-version }}
+
+    - name: Setup Bun
+      if: steps.detect.outputs.package-manager == 'bun'
+      uses: oven-sh/setup-bun@v2
+      with:
+        bun-version: ${{ inputs.bun-version }}
+
+    - name: Cache Bun dependencies
+      if: steps.detect.outputs.package-manager == 'bun'
+      uses: actions/cache@v5
+      with:
+        path: ~/.bun/install/cache
+        key: ${{ runner.os }}-bun-${{ hashFiles(format('{0}/bun.lock', inputs.working-directory), format('{0}/bun.lockb', inputs.working-directory)) }}
+        restore-keys: |
+          ${{ runner.os }}-bun-
+
+    - name: Install dependencies
+      shell: bash
+      working-directory: ${{ inputs.working-directory }}
+      run: |
+        PM="${{ steps.detect.outputs.package-manager }}"
+        
+        case "$PM" in
+          bun)
+            bun install --frozen-lockfile
+            ;;
+          pnpm)
+            pnpm install --frozen-lockfile
+            ;;
+          yarn)
+            yarn install --frozen-lockfile
+            ;;
+          npm)
+            npm ci
+            ;;
+        esac

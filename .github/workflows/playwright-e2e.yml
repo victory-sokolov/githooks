@@ -45,34 +45,12 @@ jobs:
       - name: 📥 Checkout code
         uses: actions/checkout@v6
 
-      - name: 🔧 Setup Node.js
-        uses: actions/setup-node@v6.2.0
+      - name: 📦 Setup dependencies with cache
+        uses: victory-sokolov/githooks/.github/actions/node-deps-cache@main
         with:
+          package-manager: ${{ inputs.package-manager }}
           node-version: ${{ inputs.node-version }}
-          cache: ${{ inputs.package-manager != 'bun' && inputs.package-manager || '' }}
-          cache-dependency-path: ${{ inputs.working-directory }}/${{ inputs.package-manager == 'pnpm' && 'pnpm-lock.yaml' || inputs.package-manager == 'bun' && 'bun.lockb' || 'package-lock.json' }}
-
-      - name: Setup pnpm
-        if: inputs.package-manager == 'pnpm'
-        uses: pnpm/action-setup@v4
-        with:
-          version: latest
-
-      - name: Setup bun
-        if: inputs.package-manager == 'bun'
-        uses: oven-sh/setup-bun@v2
-        with:
-          bun-version: latest
-
-      - name: 📦 Install dependencies
-        run: |
-          if [ "${{ inputs.package-manager }}" == "pnpm" ]; then
-            pnpm install --frozen-lockfile
-          elif [ "${{ inputs.package-manager }}" == "bun" ]; then
-            bun install --frozen-lockfile
-          else
-            npm ci
-          fi
+          working-directory: ${{ inputs.working-directory }}
 
       - name: Cache Playwright browsers
         uses: actions/cache@v4
@@ -94,4 +72,5 @@ jobs:
         with:
           name: playwright-report
           path: ${{ inputs.working-directory }}/playwright-report/
-          retention-days: 30
+          retention-days: 7
+          compression-level: 6

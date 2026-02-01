@@ -33,12 +33,14 @@ jobs:
           else
             echo "NODE_VERSION=24" >> $GITHUB_OUTPUT
           fi
-      - name: Use Node.js ${{ matrix.node-version }}
-        uses: actions/setup-node@v6.2.0
+
+      - name: 📦 Setup dependencies with cache
+        uses: victory-sokolov/githooks/.github/actions/node-deps-cache@main
         with:
+          package-manager: npm
           node-version: ${{ steps.nvm.outputs.NODE_VERSION }}
-          cache: 'npm'
-      - run: HUSKY=0 npm ci
+        env:
+          HUSKY: 0
 
       - name: Release
         env:

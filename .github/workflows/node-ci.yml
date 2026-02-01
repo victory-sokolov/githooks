@@ -31,32 +31,11 @@ jobs:
             echo "NODE_VERSION=24" >> $GITHUB_OUTPUT
           fi
 
-      - name: 🔧 Setup Node.js
-        if: inputs.package-manager == 'pnpm'
-        uses: actions/setup-node@6.2.0
+      - name: 📦 Setup dependencies with cache
+        uses: victory-sokolov/githooks/.github/actions/node-deps-cache@main
         with:
+          package-manager: ${{ inputs.package-manager }}
           node-version: ${{ steps.nvm.outputs.NODE_VERSION }}
-          cache: 'pnpm'
-
-      - name: 📦 Setup pnpm
-        if: inputs.package-manager == 'pnpm'
-        uses: pnpm/action-setup@v4
-        with:
-          version: latest
-
-      - name: 🍞 Setup bun
-        if: inputs.package-manager == 'bun'
-        uses: oven-sh/setup-bun@v2
-        with:
-          bun-version: latest
-
-      - name: 📦 Install dependencies
-        run: |
-          if [ "${{ inputs.package-manager }}" == "pnpm" ]; then
-            pnpm install --frozen-lockfile
-          else
-            bun install --frozen-lockfile
-          fi
 
       - name: Check available scripts
         id: scripts
@@ -124,6 +103,7 @@ jobs:
             *.coverage
             .coverage
           retention-days: 7
+          compression-level: 6
 
       - name: 🏗️ Run build
         if: steps.scripts.outputs.build == 'true'
@@ -145,6 +125,7 @@ jobs:
             .next/
             out/
           retention-days: 7
+          compression-level: 6
 
       - name: 🔍 Check for duplicate code
         if: steps.scripts.outputs.jscpd == 'true'

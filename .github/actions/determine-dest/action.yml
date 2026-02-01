@@ -1,0 +1,35 @@
+name: 'Determine Destination'
+
+inputs:
+  platform:
+    description: 'Target platform'
+    required: true
+  device:
+    description: 'Target device for simulator'
+    required: true
+
+outputs:
+  dest:
+    description: 'The destination string'
+    value: ${{ steps.dest.outputs.dest }}
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Determine destination
+      id: dest
+      shell: bash
+      run: |
+        if [[ "${{ inputs.platform }}" == "macOS" ]]; then
+          dest="platform=macOS,arch=arm64"
+        elif [[ "${{ inputs.platform }}" == "iOS Simulator" ]]; then
+          dest="platform=iOS Simulator,name=${{ inputs.device }}"
+        elif [[ "${{ inputs.platform }}" == "tvOS Simulator" ]]; then
+          dest="platform=tvOS Simulator,name=Apple TV"
+        elif [[ "${{ inputs.platform }}" == "watchOS Simulator" ]]; then
+          dest="platform=watchOS Simulator,name=Apple Watch Series 9 (45mm)"
+        else
+          echo "Unsupported platform: ${{ inputs.platform }}"
+          exit 1
+        fi
+        echo "dest=$dest" >> $GITHUB_OUTPUT

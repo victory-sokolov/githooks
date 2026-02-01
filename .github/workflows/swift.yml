@@ -94,21 +94,18 @@ jobs:
       - name: Install xcbeautify
         run: brew install xcbeautify
 
+      - name: Determine test destination
+        id: dest
+        uses: ./.github/actions/determine-dest
+        with:
+          platform: ${{ inputs.platform }}
+          device: ${{ inputs.device }}
+
       - name: Run unit tests
         shell: bash
         run: |
           # Use concrete destinations for testing (generic doesn't work for tests)
-          if [[ "${{ inputs.platform }}" == "macOS" ]]; then
-            DEST="platform=macOS,arch=arm64"
-          elif [[ "${{ inputs.platform }}" == "iOS Simulator" ]]; then
-            DEST="platform=iOS Simulator,name=${{ inputs.device }}"
-          elif [[ "${{ inputs.platform }}" == "tvOS Simulator" ]]; then
-            DEST="platform=tvOS Simulator,name=Apple TV"
-          elif [[ "${{ inputs.platform }}" == "watchOS Simulator" ]]; then
-            DEST="platform=watchOS Simulator,name=Apple Watch Series 9 (45mm)"
-          else
-            DEST="generic/platform=${{ inputs.platform }}"
-          fi
+          DEST="${{ steps.dest.outputs.dest }}"
           set -o pipefail && xcodebuild ${{ inputs.use_workspace == true && '-workspace' || '-project' }} ${{ inputs.project_name }}${{ inputs.use_workspace == true && '.xcworkspace' || '.xcodeproj' }} -scheme ${{ inputs.project_name }} -destination "$DEST" -only-testing:${{ inputs.project_name }}Tests test OTHER_SWIFT_FLAGS="-Xfrontend -strict-concurrency=complete" CODE_SIGNING_ALLOWED=NO | xcbeautify
 
   ui_tests:
@@ -122,20 +119,16 @@ jobs:
       - name: Install xcbeautify
         run: brew install xcbeautify
 
+      - name: Determine test destination
+        id: dest
+        uses: ./.github/actions/determine-dest
+        with:
+          platform: ${{ inputs.platform }}
+          device: ${{ inputs.device }}
+
       - name: Run UI tests
         shell: bash
         run: |
           # UI tests require concrete destinations
-          if [[ "${{ inputs.platform }}" == "macOS" ]]; then
-            DEST="platform=macOS,arch=arm64"
-          elif [[ "${{ inputs.platform }}" == "iOS Simulator" ]]; then
-            DEST="platform=iOS Simulator,name=iPhone 15"
-          elif [[ "${{ inputs.platform }}" == "tvOS Simulator" ]]; then
-            DEST="platform=tvOS Simulator,name=Apple TV"
-          elif [[ "${{ inputs.platform }}" == "watchOS Simulator" ]]; then
-            DEST="platform=watchOS Simulator,name=Apple Watch Series 9 (45mm)"
-          else
-            echo "Error: UI tests require a concrete destination (macOS, iOS Simulator, tvOS Simulator, or watchOS Simulator)"
-            exit 1
-          fi
+          DEST="${{ steps.dest.outputs.dest }}"
           set -o pipefail && xcodebuild ${{ inputs.use_workspace == true && '-workspace' || '-project' }} ${{ inputs.project_name }}${{ inputs.use_workspace == true && '.xcworkspace' || '.xcodeproj' }} -scheme ${{ inputs.project_name }} -destination "$DEST" -only-testing:${{ inputs.project_name }}UITests test OTHER_SWIFT_FLAGS="-Xfrontend -strict-concurrency=complete" CODE_SIGNING_ALLOWED=NO | xcbeautify

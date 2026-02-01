@@ -18,7 +18,7 @@ jobs:
     if: github.event.pull_request.head.repo.full_name == github.repository
     steps:
       - name: Delete branch
-        uses: actions/github-script@v6
+        uses: actions/github-script@v8
         with:
           script: |
             try {

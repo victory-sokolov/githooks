@@ -45,6 +45,12 @@ on:
         description: 'Custom UI test target name (defaults to {project_name}UITests)'
         required: false
         type: string
+  push:
+    paths:
+      - '**/*.swift'
+  pull_request:
+    paths:
+      - '**/*.swift'
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}

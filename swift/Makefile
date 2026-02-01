@@ -1,11 +1,12 @@
 # Makefile Swift Project
 # Provides commands for linting, formatting, and code quality checks
 APP_NAME := ""
+DESTINATION ?= 'platform=iOS Simulator,name=iPhone 15 Pro,OS=latest'
 
-.PHONY: help lint lint-fix format format-check concurrency-check analyze all check clean test pre-commit
+.PHONY: help lint lint-fix format format-check concurrency-check analyze check clean test pre-commit
 
 # Linting targets
-lint: ## Run SwiftLint to check for style violations
+lint: ## Run SwiftLint to check for style violations 
 	@echo "🔍 Running SwiftLint..."
 	swiftlint --strict
 
@@ -34,13 +35,13 @@ analyze: ## Run Xcode Static Analyzer with concurrency checks
 # Testing target
 test: ## Run tests using Swift Testing framework
 	@echo "🧪 Running tests..."
-	xcodebuild -workspace $(APP_NAME).xcworkspace -scheme $(APP_NAME) -destination 'platform=iOS Simulator,name=iPhone 16e' test 2>&1 | xcbeautify
+	xcodebuild -workspace $(APP_NAME).xcworkspace -scheme $(APP_NAME) -destination $(DESTINATION) test 2>&1 | xcbeautify
 
 # Pre-commit target
 pre-commit: ## Run pre-commit hooks on all files
 	@echo "🔗 Running pre-commit hooks..."
 	pre-commit run --all-files
-	@echo "✅ Code formatted and linting issues auto-fixed"
+	@echo "✅ Code formatted and linting checked"
 
 check: format-check lint ## Check formatting and linting (no modifications)
 	@echo "✅ Formatting and linting checks passed"
@@ -48,9 +49,7 @@ check: format-check lint ## Check formatting and linting (no modifications)
 # Clean target
 clean: ## Remove build artifacts
 	@echo "🧹 Cleaning build artifacts..."
-	rm -rf build/
-	rm -rf $(APP_NAME).xcodeproj/xcuserdata/
-	rm -rf $(APP_NAME).xcodeproj/project.xcworkspace/xcuserdata/
+	xcodebuild clean -workspace $(APP_NAME).xcworkspace -scheme $(APP_NAME)
 
 
 .DEFAULT_GOAL := help

@@ -39,7 +39,7 @@ jobs:
           if [ -f .nvmrc ]; then
             echo "NODE_VERSION=$(cat .nvmrc)" >> $GITHUB_OUTPUT
           else
-            echo "NODE_VERSION=lts" >> $GITHUB_OUTPUT
+            echo "NODE_VERSION=${{ inputs.node-version }}" >> $GITHUB_OUTPUT
           fi
 
       - name: Setup Node.js

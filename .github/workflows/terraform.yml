@@ -29,13 +29,20 @@ jobs:
   tfsec:
     name: terraform-code-quality
     runs-on: ubuntu-latest
+    env:
+      TF_PLUGIN_CACHE_DIR: ~/.terraform.d/plugin-cache
+
     permissions:
       contents: read
       pull-requests: write
+
     steps:
       - uses: actions/checkout@v6
         with:
           ref: ${{ github.event.pull_request.head.sha || github.sha }}
+
+      - name: Create Terraform plugin cache directory
+        run: mkdir -p "$TF_PLUGIN_CACHE_DIR"
       - name: Cache Terraform plugins
         uses: actions/cache@v4
         with:

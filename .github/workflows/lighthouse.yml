@@ -4,6 +4,15 @@ on:
   pull_request:
     branches: [main, master]
     types: [opened, reopened, synchronize, labeled]
+    paths:
+      - '**/*.html'
+      - '**/*.css'
+      - '**/*.js'
+      - '**/*.ts'
+      - '**/*.jsx'
+      - '**/*.tsx'
+      - 'package.json'
+      - '.lhci/**'
 
 env:
   DOTENV_PRIVATE_KEY: ${{ secrets.DOTENV_PRIVATE_KEY }}

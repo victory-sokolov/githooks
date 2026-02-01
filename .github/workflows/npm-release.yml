@@ -2,7 +2,7 @@ name: Release
 
 on:
   workflow_run:
-    workflows: ["CI"]
+    workflows: ['CI']
     types:
       - completed
     branches:
@@ -25,11 +25,19 @@ jobs:
       - uses: actions/checkout@v3
         with:
           fetch-depth: 0
+      - name: Read .nvmrc if exists
+        id: nvm
+        run: |
+          if [ -f .nvmrc ]; then
+            echo "NODE_VERSION=$(cat .nvmrc)" >> $GITHUB_OUTPUT
+          else
+            echo "NODE_VERSION=24" >> $GITHUB_OUTPUT
+          fi
       - name: Use Node.js ${{ matrix.node-version }}
         uses: actions/setup-node@v4.4.0
         with:
-          node-version: ${{ matrix.node-version }}
-          cache: "npm"
+          node-version: ${{ steps.nvm.outputs.NODE_VERSION }}
+          cache: 'npm'
       - run: HUSKY=0 npm ci
 
       - name: Release

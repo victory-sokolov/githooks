@@ -22,3 +22,6 @@ jobs:
           time_zone: 'America/New_York'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Log merge result
+        if: failure()
+        run: echo "Merge failed for PR ${{ github.event.pull_request.number }}"

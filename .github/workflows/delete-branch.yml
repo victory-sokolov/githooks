@@ -11,6 +11,9 @@ concurrency:
 jobs:
   delete_branch:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
     # Only run if the branch is in the SAME repository (not a fork)
     if: github.event.pull_request.head.repo.full_name == github.repository
     steps:
@@ -24,6 +27,7 @@ jobs:
                 repo: context.repo.repo,
                 ref: `heads/${context.payload.pull_request.head.ref}`
               });
+              console.log('Branch deleted successfully');
             } catch (error) {
-              console.log('Branch already deleted or could not be found');
+              console.log('Branch already deleted or could not be found:', error.message);
             }

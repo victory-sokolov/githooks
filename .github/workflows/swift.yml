@@ -35,7 +35,7 @@ on:
       device:
         description: 'Target device for simulator'
         required: false
-        default: 'iPhone 15'
+        default: 'iPhone 17'
         type: string
       test_target_name:
         description: 'Custom unit test target name (defaults to {project_name}Tests)'
@@ -79,6 +79,14 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v6
 
+      - name: Cache derived data
+        uses: actions/cache@v5
+        with:
+          path: ./DerivedData
+          key: xcode-derived-${{ runner.os }}-${{ inputs.project_name }}-${{ hashFiles(format('{0}.xcodeproj/project.pbxproj', inputs.project_name), format('{0}.xcworkspace/xcuserdata/**', inputs.project_name), '**/Package.resolved') }}
+          restore-keys: |
+            xcode-derived-${{ runner.os }}-${{ inputs.project_name }}-
+
       - name: Install xcbeautify
         run: brew install xcbeautify
 
@@ -93,7 +101,7 @@ jobs:
         shell: bash
         run: |
           DEST="${{ steps.dest.outputs.dest }}"
-          set -o pipefail && xcodebuild ${{ inputs.use_workspace == true && '-workspace' || '-project' }} ${{ inputs.project_name }}${{ inputs.use_workspace == true && '.xcworkspace' || '.xcodeproj' }} -scheme ${{ inputs.project_name }} -configuration Debug -destination "$DEST" build OTHER_SWIFT_FLAGS="-Xfrontend -strict-concurrency=complete" CODE_SIGNING_ALLOWED=NO | xcbeautify
+          set -o pipefail && xcodebuild ${{ inputs.use_workspace == true && '-workspace' || '-project' }} ${{ inputs.project_name }}${{ inputs.use_workspace == true && '.xcworkspace' || '.xcodeproj' }} -scheme ${{ inputs.project_name }} -configuration Debug -destination "$DEST" -derivedDataPath ./DerivedData build OTHER_SWIFT_FLAGS="-Xfrontend -strict-concurrency=complete" CODE_SIGNING_ALLOWED=NO | xcbeautify
 
   unit_tests:
     runs-on: macos-26
@@ -102,6 +110,14 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v6
+
+      - name: Cache derived data
+        uses: actions/cache@v4
+        with:
+          path: ./DerivedData
+          key: xcode-derived-${{ runner.os }}-${{ inputs.project_name }}-${{ hashFiles(format('{0}.xcodeproj/project.pbxproj', inputs.project_name), format('{0}.xcworkspace/xcuserdata/**', inputs.project_name), '**/Package.resolved') }}
+          restore-keys: |
+            xcode-derived-${{ runner.os }}-${{ inputs.project_name }}-
 
       - name: Install xcbeautify
         run: brew install xcbeautify
@@ -118,7 +134,7 @@ jobs:
         run: |
           DEST="${{ steps.dest.outputs.dest }}"
           TARGET_NAME="${{ inputs.test_target_name || format('{0}Tests', inputs.project_name) }}"
-          set -o pipefail && xcodebuild ${{ inputs.use_workspace == true && '-workspace' || '-project' }} ${{ inputs.project_name }}${{ inputs.use_workspace == true && '.xcworkspace' || '.xcodeproj' }} -scheme ${{ inputs.project_name }} -destination "$DEST" -only-testing:"$TARGET_NAME" test OTHER_SWIFT_FLAGS="-Xfrontend -strict-concurrency=complete" CODE_SIGNING_ALLOWED=NO | xcbeautify
+          set -o pipefail && xcodebuild ${{ inputs.use_workspace == true && '-workspace' || '-project' }} ${{ inputs.project_name }}${{ inputs.use_workspace == true && '.xcworkspace' || '.xcodeproj' }} -scheme ${{ inputs.project_name }} -destination "$DEST" -derivedDataPath ./DerivedData -only-testing:"$TARGET_NAME" test OTHER_SWIFT_FLAGS="-Xfrontend -strict-concurrency=complete" CODE_SIGNING_ALLOWED=NO | xcbeautify
 
   ui_tests:
     runs-on: macos-26
@@ -127,6 +143,14 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v6
+
+      - name: Cache derived data
+        uses: actions/cache@v4
+        with:
+          path: ./DerivedData
+          key: xcode-derived-${{ runner.os }}-${{ inputs.project_name }}-${{ hashFiles(format('{0}.xcodeproj/project.pbxproj', inputs.project_name), format('{0}.xcworkspace/xcuserdata/**', inputs.project_name), '**/Package.resolved') }}
+          restore-keys: |
+            xcode-derived-${{ runner.os }}-${{ inputs.project_name }}-
 
       - name: Install xcbeautify
         run: brew install xcbeautify
@@ -143,4 +167,4 @@ jobs:
         run: |
           DEST="${{ steps.dest.outputs.dest }}"
           TARGET_NAME="${{ inputs.ui_test_target_name || format('{0}UITests', inputs.project_name) }}"
-          set -o pipefail && xcodebuild ${{ inputs.use_workspace == true && '-workspace' || '-project' }} ${{ inputs.project_name }}${{ inputs.use_workspace == true && '.xcworkspace' || '.xcodeproj' }} -scheme ${{ inputs.project_name }} -destination "$DEST" -only-testing:"$TARGET_NAME" test OTHER_SWIFT_FLAGS="-Xfrontend -strict-concurrency=complete" CODE_SIGNING_ALLOWED=NO | xcbeautify
+          set -o pipefail && xcodebuild ${{ inputs.use_workspace == true && '-workspace' || '-project' }} ${{ inputs.project_name }}${{ inputs.use_workspace == true && '.xcworkspace' || '.xcodeproj' }} -scheme ${{ inputs.project_name }} -destination "$DEST" -derivedDataPath ./DerivedData -only-testing:"$TARGET_NAME" test OTHER_SWIFT_FLAGS="-Xfrontend -strict-concurrency=complete" CODE_SIGNING_ALLOWED=NO | xcbeautify

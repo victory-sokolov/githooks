@@ -17,6 +17,11 @@ on:
         required: false
         default: false
         type: boolean
+      device:
+        description: 'Target device for simulator'
+        required: false
+        default: 'iPhone 15'
+        type: string
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
@@ -68,7 +73,7 @@ jobs:
           if [[ "${{ inputs.platform }}" == "macOS" ]]; then
             DEST="platform=macOS,arch=arm64"
           elif [[ "${{ inputs.platform }}" == "iOS Simulator" ]]; then
-            DEST="platform=iOS Simulator,name=iPhone 15"
+            DEST="platform=iOS Simulator,name=${{ inputs.device }}"
           elif [[ "${{ inputs.platform }}" == "tvOS Simulator" ]]; then
             DEST="platform=tvOS Simulator,name=Apple TV"
           elif [[ "${{ inputs.platform }}" == "watchOS Simulator" ]]; then

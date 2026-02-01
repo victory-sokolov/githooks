@@ -17,6 +17,21 @@ on:
         required: false
         default: false
         type: boolean
+      run_build:
+        description: 'Run build step'
+        required: false
+        default: true
+        type: boolean
+      run_unit_tests:
+        description: 'Run unit tests'
+        required: false
+        default: true
+        type: boolean
+      run_ui_tests:
+        description: 'Run UI tests (requires concrete destinations)'
+        required: false
+        default: false
+        type: boolean
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
@@ -25,6 +40,7 @@ concurrency:
 jobs:
   lint:
     runs-on: macos-26
+    if: ${{ inputs.run_build || inputs.run_unit_tests || inputs.run_ui_tests }}
 
     steps:
       - name: Checkout code
@@ -42,8 +58,9 @@ jobs:
       - name: Run SwiftFormat lint
         run: swiftformat --dryrun --config .swiftformat .
 
-  build_and_test:
+  build:
     runs-on: macos-26
+    if: ${{ inputs.run_build }}
 
     steps:
       - name: Checkout code
@@ -61,7 +78,18 @@ jobs:
           fi
           set -o pipefail && xcodebuild ${{ inputs.use_workspace == true && '-workspace' || '-project' }} ${{ inputs.project_name }}${{ inputs.use_workspace == true && '.xcworkspace' || '.xcodeproj' }} -scheme ${{ inputs.project_name }} -configuration Debug -destination "$DEST" build OTHER_SWIFT_FLAGS="-Xfrontend -strict-concurrency=complete" CODE_SIGNING_ALLOWED=NO | xcbeautify
 
-      - name: Run tests
+  unit_tests:
+    runs-on: macos-26
+    if: ${{ inputs.run_unit_tests }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Install xcbeautify
+        run: brew install xcbeautify
+
+      - name: Run unit tests
         shell: bash
         run: |
           # Use concrete destinations for testing (generic doesn't work for tests)
@@ -76,4 +104,33 @@ jobs:
           else
             DEST="generic/platform=${{ inputs.platform }}"
           fi
-          set -o pipefail && xcodebuild ${{ inputs.use_workspace == true && '-workspace' || '-project' }} ${{ inputs.project_name }}${{ inputs.use_workspace == true && '.xcworkspace' || '.xcodeproj' }} -scheme ${{ inputs.project_name }} -destination "$DEST" test OTHER_SWIFT_FLAGS="-Xfrontend -strict-concurrency=complete" CODE_SIGNING_ALLOWED=NO | xcbeautify
+          set -o pipefail && xcodebuild ${{ inputs.use_workspace == true && '-workspace' || '-project' }} ${{ inputs.project_name }}${{ inputs.use_workspace == true && '.xcworkspace' || '.xcodeproj' }} -scheme ${{ inputs.project_name }} -destination "$DEST" -only-testing:${{ inputs.project_name }}Tests test OTHER_SWIFT_FLAGS="-Xfrontend -strict-concurrency=complete" CODE_SIGNING_ALLOWED=NO | xcbeautify
+
+  ui_tests:
+    runs-on: macos-26
+    if: ${{ inputs.run_ui_tests }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Install xcbeautify
+        run: brew install xcbeautify
+
+      - name: Run UI tests
+        shell: bash
+        run: |
+          # UI tests require concrete destinations
+          if [[ "${{ inputs.platform }}" == "macOS" ]]; then
+            DEST="platform=macOS,arch=arm64"
+          elif [[ "${{ inputs.platform }}" == "iOS Simulator" ]]; then
+            DEST="platform=iOS Simulator,name=iPhone 15"
+          elif [[ "${{ inputs.platform }}" == "tvOS Simulator" ]]; then
+            DEST="platform=tvOS Simulator,name=Apple TV"
+          elif [[ "${{ inputs.platform }}" == "watchOS Simulator" ]]; then
+            DEST="platform=watchOS Simulator,name=Apple Watch Series 9 (45mm)"
+          else
+            echo "Error: UI tests require a concrete destination (macOS, iOS Simulator, tvOS Simulator, or watchOS Simulator)"
+            exit 1
+          fi
+          set -o pipefail && xcodebuild ${{ inputs.use_workspace == true && '-workspace' || '-project' }} ${{ inputs.project_name }}${{ inputs.use_workspace == true && '.xcworkspace' || '.xcodeproj' }} -scheme ${{ inputs.project_name }} -destination "$DEST" -only-testing:${{ inputs.project_name }}UITests test OTHER_SWIFT_FLAGS="-Xfrontend -strict-concurrency=complete" CODE_SIGNING_ALLOWED=NO | xcbeautify

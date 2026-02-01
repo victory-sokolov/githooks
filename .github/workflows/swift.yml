@@ -56,4 +56,10 @@ jobs:
         run: set -o pipefail && xcodebuild ${{ inputs.use_workspace == true && '-workspace' || '-project' }} ${{ inputs.project_name }}${{ inputs.use_workspace == true && '.xcworkspace' || '.xcodeproj' }} -scheme ${{ inputs.project_name }} -configuration Debug -destination 'generic/platform=${{ inputs.platform }}' build OTHER_SWIFT_FLAGS="-Xfrontend -strict-concurrency=complete" CODE_SIGNING_ALLOWED=NO | xcbeautify
 
       - name: Run tests
-        run: set -o pipefail && xcodebuild ${{ inputs.use_workspace == true && '-workspace' || '-project' }} ${{ inputs.project_name }}${{ inputs.use_workspace == true && '.xcworkspace' || '.xcodeproj' }} -scheme ${{ inputs.project_name }} -destination 'platform=${{ inputs.platform }}' test OTHER_SWIFT_FLAGS="-Xfrontend -strict-concurrency=complete" CODE_SIGNING_ALLOWED=NO | xcbeautify
+        shell: bash
+        run: |
+          DEST="generic/platform=${{ inputs.platform }}"
+          if [[ "${{ inputs.platform }}" == "macOS" ]]; then
+            DEST="platform=macOS,arch=arm64"
+          fi
+          set -o pipefail && xcodebuild ${{ inputs.use_workspace == true && '-workspace' || '-project' }} ${{ inputs.project_name }}${{ inputs.use_workspace == true && '.xcworkspace' || '.xcodeproj' }} -scheme ${{ inputs.project_name }} -destination "$DEST" test OTHER_SWIFT_FLAGS="-Xfrontend -strict-concurrency=complete" CODE_SIGNING_ALLOWED=NO | xcbeautify

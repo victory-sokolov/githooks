@@ -1,13 +1,11 @@
 name: Reusable Node.js CI
-# Complete CI workflow for Node.js projects supporting both bun and pnpm
-# Runs: setup → lint → typecheck → test → build → audit
-# Uploads coverage and build artifacts
 
 on:
   workflow_call:
     inputs:
       package-manager:
         description: 'Package manager to use (bun or pnpm)'
+        default: 'bun'
         required: true
         type: string
 

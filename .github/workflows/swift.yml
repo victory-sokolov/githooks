@@ -37,6 +37,14 @@ on:
         required: false
         default: 'iPhone 15'
         type: string
+      test_target_name:
+        description: 'Custom unit test target name (defaults to {project_name}Tests)'
+        required: false
+        type: string
+      ui_test_target_name:
+        description: 'Custom UI test target name (defaults to {project_name}UITests)'
+        required: false
+        type: string
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
@@ -74,13 +82,17 @@ jobs:
       - name: Install xcbeautify
         run: brew install xcbeautify
 
-      - name: Build for simulator
+      - name: Determine destination
+        id: dest
+        uses: ./.github/actions/determine-dest-swift
+        with:
+          platform: ${{ inputs.platform }}
+          device: ${{ inputs.device }}
+
+      - name: Build for platform
         shell: bash
         run: |
-          DEST="generic/platform=${{ inputs.platform }}"
-          if [[ "${{ inputs.platform }}" == "macOS" ]]; then
-            DEST="platform=macOS,arch=arm64"
-          fi
+          DEST="${{ steps.dest.outputs.dest }}"
           set -o pipefail && xcodebuild ${{ inputs.use_workspace == true && '-workspace' || '-project' }} ${{ inputs.project_name }}${{ inputs.use_workspace == true && '.xcworkspace' || '.xcodeproj' }} -scheme ${{ inputs.project_name }} -configuration Debug -destination "$DEST" build OTHER_SWIFT_FLAGS="-Xfrontend -strict-concurrency=complete" CODE_SIGNING_ALLOWED=NO | xcbeautify
 
   unit_tests:
@@ -104,9 +116,9 @@ jobs:
       - name: Run unit tests
         shell: bash
         run: |
-          # Use concrete destinations for testing (generic doesn't work for tests)
           DEST="${{ steps.dest.outputs.dest }}"
-          set -o pipefail && xcodebuild ${{ inputs.use_workspace == true && '-workspace' || '-project' }} ${{ inputs.project_name }}${{ inputs.use_workspace == true && '.xcworkspace' || '.xcodeproj' }} -scheme ${{ inputs.project_name }} -destination "$DEST" -only-testing:${{ inputs.project_name }}Tests test OTHER_SWIFT_FLAGS="-Xfrontend -strict-concurrency=complete" CODE_SIGNING_ALLOWED=NO | xcbeautify
+          TARGET_NAME="${{ inputs.test_target_name || format('{0}Tests', inputs.project_name) }}"
+          set -o pipefail && xcodebuild ${{ inputs.use_workspace == true && '-workspace' || '-project' }} ${{ inputs.project_name }}${{ inputs.use_workspace == true && '.xcworkspace' || '.xcodeproj' }} -scheme ${{ inputs.project_name }} -destination "$DEST" -only-testing:"$TARGET_NAME" test OTHER_SWIFT_FLAGS="-Xfrontend -strict-concurrency=complete" CODE_SIGNING_ALLOWED=NO | xcbeautify
 
   ui_tests:
     runs-on: macos-26
@@ -129,6 +141,6 @@ jobs:
       - name: Run UI tests
         shell: bash
         run: |
-          # UI tests require concrete destinations
           DEST="${{ steps.dest.outputs.dest }}"
-          set -o pipefail && xcodebuild ${{ inputs.use_workspace == true && '-workspace' || '-project' }} ${{ inputs.project_name }}${{ inputs.use_workspace == true && '.xcworkspace' || '.xcodeproj' }} -scheme ${{ inputs.project_name }} -destination "$DEST" -only-testing:${{ inputs.project_name }}UITests test OTHER_SWIFT_FLAGS="-Xfrontend -strict-concurrency=complete" CODE_SIGNING_ALLOWED=NO | xcbeautify
+          TARGET_NAME="${{ inputs.ui_test_target_name || format('{0}UITests', inputs.project_name) }}"
+          set -o pipefail && xcodebuild ${{ inputs.use_workspace == true && '-workspace' || '-project' }} ${{ inputs.project_name }}${{ inputs.use_workspace == true && '.xcworkspace' || '.xcodeproj' }} -scheme ${{ inputs.project_name }} -destination "$DEST" -only-testing:"$TARGET_NAME" test OTHER_SWIFT_FLAGS="-Xfrontend -strict-concurrency=complete" CODE_SIGNING_ALLOWED=NO | xcbeautify

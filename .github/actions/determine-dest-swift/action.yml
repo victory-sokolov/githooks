@@ -7,7 +7,8 @@ inputs:
     required: true
   device:
     description: 'Target device for simulator'
-    required: true
+    required: false
+    default: 'iPhone 15'
 
 outputs:
   dest:
@@ -21,16 +22,22 @@ runs:
       id: dest
       shell: bash
       run: |
-        if [[ "${{ inputs.platform }}" == "macOS" ]]; then
+        # Normalize platform string (remove quotes, trim whitespace)
+        PLATFORM=$(echo "${{ inputs.platform }}" | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//' -e 's/^"//' -e 's/"$//' -e "s/^'//" -e "s/'$//")
+        DEVICE="${{ inputs.device }}"
+        
+        if [[ "$PLATFORM" == "macOS" ]]; then
           dest="platform=macOS,arch=arm64"
-        elif [[ "${{ inputs.platform }}" == "iOS Simulator" ]]; then
-          dest="platform=iOS Simulator,name=${{ inputs.device }}"
-        elif [[ "${{ inputs.platform }}" == "tvOS Simulator" ]]; then
+        elif [[ "$PLATFORM" == "iOS Simulator" ]]; then
+          dest="platform=iOS Simulator,name=$DEVICE"
+        elif [[ "$PLATFORM" == "tvOS Simulator" ]]; then
           dest="platform=tvOS Simulator,name=Apple TV"
-        elif [[ "${{ inputs.platform }}" == "watchOS Simulator" ]]; then
+        elif [[ "$PLATFORM" == "watchOS Simulator" ]]; then
           dest="platform=watchOS Simulator,name=Apple Watch Series 9 (45mm)"
         else
-          echo "Unsupported platform: ${{ inputs.platform }}"
-          exit 1
+          # Fallback to generic for build-only scenarios if not a simulator
+          dest="generic/platform=$PLATFORM"
         fi
+        
+        echo "Determined destination: $dest"
         echo "dest=$dest" >> $GITHUB_OUTPUT

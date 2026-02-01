@@ -4,14 +4,19 @@ on:
   workflow_call:
     inputs:
       project_name:
-        description: 'Xcode project name (without .xcodeproj)'
+        description: 'Xcode project name (without .xcodeproj/.xcworkspace)'
         required: true
         type: string
       platform:
         description: 'Target platform'
         required: false
-        default: 'macOS'
+        default: 'iOS Simulator'
         type: string
+      use_workspace:
+        description: 'Use workspace instead of project'
+        required: false
+        default: false
+        type: boolean
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
@@ -32,7 +37,7 @@ jobs:
         run: brew install swiftformat
 
       - name: Run SwiftLint
-        run: swiftlint lint --strict
+        run: swiftlint --strict
 
       - name: Run SwiftFormat lint
         run: swiftformat --dryrun --config .swiftformat .
@@ -48,7 +53,7 @@ jobs:
         run: brew install xcbeautify
 
       - name: Build for simulator
-        run: set -o pipefail && xcodebuild -project ${{ inputs.project_name }}.xcodeproj -scheme ${{ inputs.project_name }} -configuration Debug -destination 'generic/platform=${{ inputs.platform }}' build OTHER_SWIFT_FLAGS="-Xfrontend -strict-concurrency=complete" CODE_SIGNING_ALLOWED=NO | xcbeautify
+        run: set -o pipefail && xcodebuild ${{ inputs.use_workspace == true && '-workspace' || '-project' }} ${{ inputs.project_name }}${{ inputs.use_workspace == true && '.xcworkspace' || '.xcodeproj' }} -scheme ${{ inputs.project_name }} -configuration Debug -destination 'generic/platform=${{ inputs.platform }}' build OTHER_SWIFT_FLAGS="-Xfrontend -strict-concurrency=complete" CODE_SIGNING_ALLOWED=NO | xcbeautify
 
       - name: Run tests
-        run: set -o pipefail && xcodebuild -project ${{ inputs.project_name }}.xcodeproj -scheme ${{ inputs.project_name }} -destination 'generic/platform=${{ inputs.platform }}' test OTHER_SWIFT_FLAGS="-Xfrontend -strict-concurrency=complete" CODE_SIGNING_ALLOWED=NO | xcbeautify
+        run: set -o pipefail && xcodebuild ${{ inputs.use_workspace == true && '-workspace' || '-project' }} ${{ inputs.project_name }}${{ inputs.use_workspace == true && '.xcworkspace' || '.xcodeproj' }} -scheme ${{ inputs.project_name }} -destination 'generic/platform=${{ inputs.platform }}' test OTHER_SWIFT_FLAGS="-Xfrontend -strict-concurrency=complete" CODE_SIGNING_ALLOWED=NO | xcbeautify

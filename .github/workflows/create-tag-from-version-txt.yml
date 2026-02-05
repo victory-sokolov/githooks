@@ -38,10 +38,10 @@ jobs:
           echo "Changed files: $CHANGED_FILES"
           if echo "$CHANGED_FILES" | grep -w "VERSION.txt"; then
             echo "VERSION.txt has been changed."
-            echo "result=true" >> $GITHUB_OUTPUT
+            echo "result=true" >> "$GITHUB_OUTPUT"
           else
             echo "VERSION.txt not changed."
-            echo "result=false" >> $GITHUB_OUTPUT
+            echo "result=false" >> "$GITHUB_OUTPUT"
           fi
 
       - name: Read version from VERSION.txt
@@ -49,7 +49,7 @@ jobs:
         id: read_version
         run: |
           VERSION=$(cat VERSION.txt)
-          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
 
       - name: Create and push tag
         if: steps.version_changed.outputs.result == 'true'
@@ -58,8 +58,8 @@ jobs:
           VERSION: ${{ steps.read_version.outputs.version }}
         run: |
           TAG_NAME="v$VERSION"
-          echo "TAG_NAME=$TAG_NAME" >> $GITHUB_ENV
-          echo "tag_name=$TAG_NAME" >> $GITHUB_OUTPUT
+          echo "TAG_NAME=$TAG_NAME" >> "$GITHUB_ENV"
+          echo "tag_name=$TAG_NAME" >> "$GITHUB_OUTPUT"
 
           # Configure git
           git config user.name "github-actions[bot]"
@@ -68,12 +68,12 @@ jobs:
           # Check if tag already exists
           if git tag -l "$TAG_NAME" | grep -q "$TAG_NAME"; then
             echo "Tag $TAG_NAME already exists."
-            echo "should_create_tag=false" >> $GITHUB_OUTPUT
+            echo "should_create_tag=false" >> "$GITHUB_OUTPUT"
           else
             git tag "$TAG_NAME"
             git push origin "$TAG_NAME"
             echo "Created and pushed tag $TAG_NAME"
-            echo "should_create_tag=true" >> $GITHUB_OUTPUT
+            echo "should_create_tag=true" >> "$GITHUB_OUTPUT"
           fi
       - name: Debug tag creation
         run: |

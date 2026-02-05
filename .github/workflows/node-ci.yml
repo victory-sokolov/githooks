@@ -6,7 +6,6 @@ on:
       package-manager:
         description: 'Package manager to use (bun or pnpm)'
         default: 'bun'
-        required: true
         type: string
 
 concurrency:
@@ -26,9 +25,9 @@ jobs:
         id: nvm
         run: |
           if [ -f .nvmrc ]; then
-            echo "NODE_VERSION=$(cat .nvmrc)" >> $GITHUB_OUTPUT
+            echo "NODE_VERSION=$(cat .nvmrc)" >> "$GITHUB_OUTPUT"
           else
-            echo "NODE_VERSION=24" >> $GITHUB_OUTPUT
+            echo "NODE_VERSION=24" >> "$GITHUB_OUTPUT"
           fi
 
       - name: 📦 Setup dependencies with cache
@@ -55,8 +54,8 @@ jobs:
               console.log(outputName + '=false');
             });
           }
-          " >> $GITHUB_OUTPUT
-          echo "has_src_lib=$([ -d src ] || [ -d lib ] && echo 'true' || echo 'false')" >> $GITHUB_OUTPUT
+          " >> "$GITHUB_OUTPUT"
+          echo "has_src_lib=$([ -d src ] || [ -d lib ] && echo 'true' || echo 'false')" >> "$GITHUB_OUTPUT"
 
       - name: 🔍 Run lint
         if: steps.scripts.outputs.lint == 'true'

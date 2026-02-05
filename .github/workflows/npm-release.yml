@@ -29,16 +29,16 @@ jobs:
         id: nvm
         run: |
           if [ -f .nvmrc ]; then
-            echo "NODE_VERSION=$(cat .nvmrc)" >> $GITHUB_OUTPUT
+            echo "NODE_VERSION=$(cat .nvmrc)" >> "$GITHUB_OUTPUT"
           else
-            echo "NODE_VERSION=24" >> $GITHUB_OUTPUT
+            echo "NODE_VERSION=24" >> "$GITHUB_OUTPUT"
           fi
 
       - name: 📦 Setup dependencies with cache
         uses: victory-sokolov/githooks/.github/actions/node-deps-cache@main
         with:
-          package-manager: npm
-          node-version: ${{ steps.nvm.outputs.NODE_VERSION }}
+          package-manager: "npm"
+          node-version: "${{ steps.nvm.outputs.NODE_VERSION }}"
         env:
           HUSKY: 0
 

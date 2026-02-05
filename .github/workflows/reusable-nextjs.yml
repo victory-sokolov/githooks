@@ -37,17 +37,17 @@ jobs:
         id: nvm
         run: |
           if [ -f .nvmrc ]; then
-            echo "NODE_VERSION=$(cat .nvmrc)" >> $GITHUB_OUTPUT
+            echo "NODE_VERSION=$(cat .nvmrc)" >> "$GITHUB_OUTPUT"
           else
-            echo "NODE_VERSION=${{ inputs.node-version }}" >> $GITHUB_OUTPUT
+            echo "NODE_VERSION=${{ inputs.node-version }}" >> "$GITHUB_OUTPUT"
           fi
 
       - name: 📦 Setup dependencies with cache
         uses: victory-sokolov/githooks/.github/actions/node-deps-cache@main
         with:
-          package-manager: ${{ inputs.package-manager }}
-          node-version: ${{ steps.nvm.outputs.NODE_VERSION }}
-          working-directory: ${{ inputs.working-directory }}
+          package-manager: "${{ inputs.package-manager }}"
+          node-version: "${{ steps.nvm.outputs.NODE_VERSION }}"
+          working-directory: "${{ inputs.working-directory }}"
 
       - name: Cache Next.js build outputs
         uses: actions/cache@v4

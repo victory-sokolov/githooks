@@ -1,0 +1,12 @@
+#!/bin/bash
+
+# Get the last commit message
+commit_msg=$(git log -1 --pretty=%B)
+
+# Check if the message contains "update" or "update notes" (case-insensitive)
+if [[ "$commit_msg" =~ [Uu]pdate ]] || [[ "$commit_msg" =~ "update notes" ]]; then
+    echo "Detected 'update' keyword. Pushing to remote..."
+    git push
+else
+    echo "No update keywords found. Skipping auto-push."
+fi

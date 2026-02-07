@@ -1,4 +1,4 @@
-name: Next.js Build and Export
+name: nextjs
 
 on:
   workflow_call:

@@ -23,6 +23,10 @@ format-check: ## Check Swift code formatting without modifying files
 	@echo "🔍 Checking Swift code formatting..."
 	swiftformat --dryrun --config .swiftformat .
 
+jscpd: ## Run jscpd to detect code duplication
+	@echo "🔍 Running jscpd for code duplication detection..."
+	npx jscpd $(APP_NAME)/Sources $(APP_NAME)/Tests --config .jscpd.json
+
 # Code quality checks
 concurrency-check: ## Check for Swift 6 concurrency issues
 	@echo "🔒 Checking for Swift 6 concurrency issues..."

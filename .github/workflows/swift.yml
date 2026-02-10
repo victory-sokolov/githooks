@@ -74,11 +74,20 @@ jobs:
       - name: Install SwiftFormat
         run: brew install swiftformat
 
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+
       - name: Run SwiftLint
         run: swiftlint --strict
 
       - name: Run SwiftFormat lint
         run: swiftformat --dryrun --config .swiftformat .
+
+      - name: Run jscpd for code duplication
+        run: |
+          npx jscpd ${{ inputs.project_name }} --config .jscpd.json
 
   build:
     runs-on: macos-26

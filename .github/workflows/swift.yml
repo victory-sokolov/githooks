@@ -113,6 +113,13 @@ jobs:
       - name: Install xcbeautify
         run: brew install xcbeautify
 
+      - name: Clean build folder
+        if: ${{ inputs.use_workspace == false }}
+        run: |
+          rm -rf ~/Library/Developer/Xcode/DerivedData
+          rm -rf ./DerivedData
+          set -o pipefail && xcodebuild -project ${{ inputs.project_name }}.xcodeproj -scheme ${{ inputs.project_name }} clean CODE_SIGNING_ALLOWED=NO
+
       - name: Determine destination
         id: dest
         uses: victory-sokolov/githooks/.github/actions/determine-dest-swift@main

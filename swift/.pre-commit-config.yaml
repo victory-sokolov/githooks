@@ -10,3 +10,12 @@ repos:
     hooks:
       - id: swiftlint
         args: [--strict, --config, .swiftlint.yml]
+
+  - repo: local
+    hooks:
+      - id: jscpd
+        name: jscpd
+        entry: npx jscpd . --config .jscpd.json
+        language: system
+        files: \.swift$
+        pass_filenames: false

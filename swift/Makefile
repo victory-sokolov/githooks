@@ -25,7 +25,7 @@ format-check: ## Check Swift code formatting without modifying files
 
 jscpd: ## Run jscpd to detect code duplication
 	@echo "🔍 Running jscpd for code duplication detection..."
-	npx jscpd $(APP_NAME)/Sources $(APP_NAME)/Tests --config .jscpd.json
+	npx jscpd . --config .jscpd.json
 
 # Code quality checks
 concurrency-check: ## Check for Swift 6 concurrency issues
@@ -47,7 +47,7 @@ pre-commit: ## Run pre-commit hooks on all files
 	pre-commit run --all-files
 	@echo "✅ Code formatted and linting checked"
 
-check: format-check lint ## Check formatting and linting (no modifications)
+check: format-check lint jscpd ## Run code quality checks
 	@echo "✅ Formatting and linting checks passed"
 
 # Clean target

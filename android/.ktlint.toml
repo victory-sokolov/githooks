@@ -1,0 +1,29 @@
+# ktlint Configuration
+# See: https://pinterest.github.io/ktlint/latest/rules/configuration/
+
+# Disabled rules - add any rules you want to disable
+disabled_rules = []
+
+indent_size = 4
+
+# Continuation indentation (default: 4)
+continuation_indent_size = 4
+
+# Insert newlines after annotated declaration (default: true)
+insert_newlines_after_annotated_declarations = true
+
+# Max line length (default: off - no limit)
+max_line_length = 140
+
+# Enable experimental rules
+experimental_rules = false
+
+# Formatting options
+[formatter]
+# Enable auto-correcting style violations
+enabled_by_default = true
+
+# Configure specific rules
+[.ktlint_stdlib]
+# Disable stdlib rules if needed
+disabled_rules = []

@@ -1,0 +1,375 @@
+name: Android CI
+
+on:
+  workflow_call:
+    inputs:
+      runner:
+        description: 'Runner label to use for jobs (ubuntu-latest, macos-latest, windows-latest)'
+        required: false
+        default: 'ubuntu-latest'
+        type: string
+      java_version:
+        description: 'Java version to use'
+        required: false
+        default: '21'
+        type: string
+      ktlint_version:
+        description: 'ktlint version to download'
+        required: false
+        default: '1.3.1'
+        type: string
+  push:
+    paths:
+      - '**/*.kt'
+      - '**/*.kts'
+      - '**/build.gradle*'
+      - '**/settings.gradle*'
+      - '**/gradle.properties'
+  pull_request:
+    paths:
+      - '**/*.kt'
+      - '**/*.kts'
+      - '**/build.gradle*'
+      - '**/settings.gradle*'
+      - '**/gradle.properties'
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+env:
+  KTLINT_VERSION: ${{ inputs.ktlint_version || '1.3.1' }}
+  KTLINT_CACHE_DIR: ${{ github.workspace }}/.ktlint-cache
+
+jobs:
+  ktlint:
+    name: ktlint (style & format)
+    runs-on: ${{ inputs.runner || 'ubuntu-latest' }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Cache ktlint
+        id: cache-ktlint
+        uses: actions/cache@v5
+        with:
+          path: ${{ env.KTLINT_CACHE_DIR }}
+          key: ${{ runner.os }}-ktlint-${{ env.KTLINT_VERSION }}
+          restore-keys: |
+            ${{ runner.os }}-ktlint-
+
+      - name: Download ktlint
+        if: steps.cache-ktlint.outputs.cache-hit != 'true'
+        run: |
+          KTLINT_URL="https://github.com/pinterest/ktlint/releases/download/${KTLINT_VERSION}/ktlint"
+          echo "Downloading ktlint ${KTLINT_VERSION} from ${KTLINT_URL}"
+          curl -sSLO ${KTLINT_URL} -o ${{ env.KTLINT_CACHE_DIR }}/ktlint
+          chmod +x ${{ env.KTLINT_CACHE_DIR }}/ktlint
+          ${{ env.KTLINT_CACHE_DIR }}/ktlint --version
+
+      - name: Verify ktlint
+        run: |
+          ${{ env.KTLINT_CACHE_DIR }}/ktlint --version
+
+      - name: Run ktlint check
+        run: |
+          ${{ env.KTLINT_CACHE_DIR }}/ktlint --reporter=plain --relative .
+
+      - name: Run ktlint format check
+        run: |
+          ${{ env.KTLINT_CACHE_DIR }}/ktlint --reporter=plain --relative --format .
+
+  detekt:
+    name: detekt (static analysis)
+    runs-on: ${{ inputs.runner || 'ubuntu-latest' }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Setup JDK
+        uses: actions/setup-java@v5
+        with:
+          distribution: 'temurin'
+          java-version: ${{ inputs.java_version }}
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v5
+
+      - name: Cache Gradle wrappers
+        uses: actions/cache@v5
+        with:
+          path: |
+            ~/.gradle/wrapper
+            ~/.gradle/wrapper/dists
+          key: ${{ runner.os }}-gradle-wrapper-${{ hashFiles('**/gradle/wrapper/gradle-wrapper.properties') }}
+          restore-keys: |
+            ${{ runner.os }}-gradle-wrapper-
+
+      - name: Cache Gradle dependencies
+        uses: actions/cache@v5
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/caches/modules-2
+            ~/.gradle/caches/modules-2/metadata-*
+            ~/.gradle/caches/modules-2/metadata-*/module-metadata.bin
+          key: ${{ runner.os }}-gradle-deps-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties', '**/libs.versions.toml', '**/gradle.properties') }}
+          restore-keys: |
+            ${{ runner.os }}-gradle-deps-
+
+      - name: Cache Gradle build cache
+        uses: actions/cache@v5
+        with:
+          path: |
+            ~/.gradle/caches/build-cache-*
+            .gradle/build-cache
+          key: ${{ runner.os }}-gradle-build-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties', '**/libs.versions.toml') }}
+          restore-keys: |
+            ${{ runner.os }}-gradle-build-
+
+      - name: Cache detekt
+        uses: actions/cache@v5
+        with:
+          path: ~/.gradle/caches/modules-2/files-*
+          key: ${{ runner.os }}-detekt-${{ hashFiles('**/detekt.yml') }}
+          restore-keys: |
+            ${{ runner.os }}-detekt-
+
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+
+      - name: Run detekt
+        run: ./gradlew detekt --no-daemon --continue
+
+      - name: Upload detekt reports
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: detekt-reports
+          path: '**/build/reports/detekt/**'
+
+  build:
+    name: Build
+    runs-on: ${{ inputs.runner || 'ubuntu-latest' }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: ${{ inputs.java_version }}
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v3
+
+      - name: Cache Gradle wrappers
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/wrapper
+            ~/.gradle/wrapper/dists
+          key: ${{ runner.os }}-gradle-wrapper-${{ hashFiles('**/gradle/wrapper/gradle-wrapper.properties') }}
+          restore-keys: |
+            ${{ runner.os }}-gradle-wrapper-
+
+      - name: Cache Gradle dependencies
+        uses: actions/cache@v5
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/caches/modules-2
+            ~/.gradle/caches/modules-2/metadata-*
+            ~/.gradle/caches/modules-2/metadata-*/module-metadata.bin
+          key: ${{ runner.os }}-gradle-deps-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties', '**/libs.versions.toml', '**/gradle.properties') }}
+          restore-keys: |
+            ${{ runner.os }}-gradle-deps-
+
+      - name: Cache Gradle build cache
+        uses: actions/cache@v5
+        with:
+          path: |
+            ~/.gradle/caches/build-cache-*
+            .gradle/build-cache
+          key: ${{ runner.os }}-gradle-build-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties', '**/libs.versions.toml') }}
+          restore-keys: |
+            ${{ runner.os }}-gradle-build-
+
+      - name: Cache build outputs
+        uses: actions/cache@v5
+        with:
+          path: |
+            **/build/
+            !**/build/reports/
+            !**/build/outputs/
+          key: ${{ runner.os }}-build-${{ hashFiles('**/*.kt', '**/*.kts', '**/*.gradle*') }}
+          restore-keys: |
+            ${{ runner.os }}-build-
+
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+
+      - name: Build with Gradle
+        run: ./gradlew assembleDebug --no-daemon --stacktrace --build-cache
+
+      - name: Upload build artifacts
+        if: success()
+        uses: actions/upload-artifact@v6
+        with:
+          name: apk-debug
+          path: '**/build/outputs/apk/debug/*.apk'
+
+  unit_tests:
+    name: Unit Tests
+    runs-on: ${{ inputs.runner || 'ubuntu-latest' }}
+    needs: build
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Setup JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: ${{ inputs.java_version }}
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v3
+
+      - name: Cache Gradle wrappers
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/wrapper
+            ~/.gradle/wrapper/dists
+          key: ${{ runner.os }}-gradle-wrapper-${{ hashFiles('**/gradle/wrapper/gradle-wrapper.properties') }}
+          restore-keys: |
+            ${{ runner.os }}-gradle-wrapper-
+
+      - name: Cache Gradle dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/caches/modules-2
+            ~/.gradle/caches/modules-2/metadata-*
+            ~/.gradle/caches/modules-2/metadata-*/module-metadata.bin
+          key: ${{ runner.os }}-gradle-deps-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties', '**/libs.versions.toml', '**/gradle.properties') }}
+          restore-keys: |
+            ${{ runner.os }}-gradle-deps-
+
+      - name: Cache Gradle build cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches/build-cache-*
+            .gradle/build-cache
+          key: ${{ runner.os }}-gradle-build-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties', '**/libs.versions.toml') }}
+          restore-keys: |
+            ${{ runner.os }}-gradle-build-
+
+      - name: Restore build outputs
+        uses: actions/cache/restore@v4
+        with:
+          path: |
+            **/build/
+            !**/build/reports/
+            !**/build/outputs/
+          key: ${{ runner.os }}-build-${{ hashFiles('**/*.kt', '**/*.kts', '**/*.gradle*') }}
+          restore-keys: |
+            ${{ runner.os }}-build-
+
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+
+      - name: Run unit tests
+        run: ./gradlew testDebugUnitTest --no-daemon --continue
+
+      - name: Upload test reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-reports
+          path: '**/build/reports/tests/**'
+
+      - name: Publish test report
+        if: always()
+        uses: mikepenz/action-junit-report@v4
+        with:
+          report_paths: '**/build/test-results/testDebugUnitTest/**/*.xml'
+          detailed_summary: true
+          include_passed: true
+
+      - name: Upload test results
+        if: always()
+        uses: EnricoMi/publish-unit-test-result-action@v2
+        with:
+          files: '**/build/test-results/testDebugUnitTest/**/*.xml'
+          check_name: Unit Test Results
+
+  lint:
+    name: Android Lint
+    runs-on: ${{ inputs.runner || 'ubuntu-latest' }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Setup JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: ${{ inputs.java_version }}
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v3
+
+      - name: Cache Gradle wrappers
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/wrapper
+            ~/.gradle/wrapper/dists
+          key: ${{ runner.os }}-gradle-wrapper-${{ hashFiles('**/gradle/wrapper/gradle-wrapper.properties') }}
+          restore-keys: |
+            ${{ runner.os }}-gradle-wrapper-
+
+      - name: Cache Gradle dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/caches/modules-2
+            ~/.gradle/caches/modules-2/metadata-*
+            ~/.gradle/caches/modules-2/metadata-*/module-metadata.bin
+          key: ${{ runner.os }}-gradle-deps-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties', '**/libs.versions.toml', '**/gradle.properties') }}
+          restore-keys: |
+            ${{ runner.os }}-gradle-deps-
+
+      - name: Cache Gradle build cache
+        uses: actions/cache@v5
+        with:
+          path: |
+            ~/.gradle/caches/build-cache-*
+            .gradle/build-cache
+          key: ${{ runner.os }}-gradle-build-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties', '**/libs.versions.toml') }}
+          restore-keys: |
+            ${{ runner.os }}-gradle-build-
+
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+
+      - name: Run Android Lint
+        run: ./gradlew lintDebug --no-daemon --continue
+
+      - name: Upload lint reports
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: lint-reports
+          path: '**/build/reports/lint-results-*.html'

@@ -1,0 +1,44 @@
+{
+    "threshold": 100,
+    "reporters": [
+        "console",
+        "badge"
+    ],
+    "ignore": [
+        "**/build/**",
+        "**/build-generated/**",
+        "**/.*",
+        "**/node_modules/**",
+        "**/generated/**"
+    ],
+    "formats": [
+        "typescript",
+        "javascript",
+        "jsx",
+        "tsx"
+    ],
+    "detectors": {
+        "lines": {
+            "minLines": 5,
+            "maxLines": 1000
+        },
+        "ast": {
+            "detectors": [
+                "function",
+                "class",
+                "method"
+            ]
+        }
+    },
+    "pathPatterns": [
+        "**/*.kt",
+        "**/*.kts",
+        "**/*.gradle",
+        "**/*.gradle.kts"
+    ],
+    "outputFile": "jscpd-report.json",
+    "options": {
+        "minLines": 5,
+        "maxLines": 1000
+    }
+}

@@ -1,0 +1,46 @@
+repos:
+  # ktlint - Kotlin linter and formatter (run directly without Gradle)
+  - repo: local
+    hooks:
+      - id: ktlint
+        name: ktlint
+        entry: .ktlint-cache/ktlint --reporter=plain --relative
+        language: system
+        files: \.kt$
+        pass_filenames: true
+
+      - id: ktlint-format
+        name: ktlint format check
+        entry: .ktlint-cache/ktlint --reporter=plain --relative --format
+        language: system
+        files: \.kt$
+        pass_filenames: true
+
+  # detekt - Static code analysis for Kotlin
+  - repo: local
+    hooks:
+      - id: detekt
+        name: detekt
+        entry: ./gradlew detekt
+        language: system
+        files: \.kt$
+        pass_filenames: false
+
+  # jscpd for code duplication detection
+  - repo: local
+    hooks:
+      - id: jscpd-kotlin
+        name: jscpd (Kotlin)
+        entry: npx jscpd . --config .jscpd.json
+        language: system
+        files: \.(kt|kts|gradle)$
+        pass_filenames: false
+
+  # Check for TODO/FIXME comments
+  - repo: local
+    hooks:
+      - id: forbidden-todos
+        name: Check for TODO/FIXME comments
+        entry: grep -rnE 'TODO:|FIXME:' --exclude-dir=build --exclude-dir=.git
+        language: system
+        files: \.(kt|kts|gradle)$

@@ -83,6 +83,10 @@ jobs:
             bun run typecheck
           fi
 
+      - uses: reviewdog/action-setup@d8edfce3dd5e1ec6978745e801f9c50b5ef80252 # v1.4.0
+        with:
+          reviewdog_version: latest
+
       - name: 🧪 Run tests
         if: steps.scripts.outputs.test == 'true'
         run: |

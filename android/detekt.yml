@@ -140,10 +140,6 @@ exceptions:
 
 formatting:
   active: true
-  AndroidStudioFormatFile:
-    active: false # Not applicable
-  AnnotationOnSeparateLine:
-    active: false
   ChainWrapping:
     active: true
     autoCorrect: true
@@ -168,8 +164,6 @@ formatting:
   ModifierOrdering:
     active: true
     autoCorrect: true
-  MultiLineIfElse:
-    active: false
   NoBlankLineBeforeRbrace:
     active: true
     autoCorrect: true
@@ -185,8 +179,6 @@ formatting:
   NoLineBreakAfterElse:
     active: true
     autoCorrect: true
-  NoLineBreakBeforeElse:
-    active: false
   NoMultipleSpaces:
     active: true
     autoCorrect: true
@@ -211,7 +203,7 @@ formatting:
   ParameterListWrapping:
     active: true
     autoCorrect: true
-   SpacingAroundColon:
+  SpacingAroundColon:
     active: true
     autoCorrect: true
   SpacingAroundComma:
@@ -223,8 +215,6 @@ formatting:
   SpacingAroundDot:
     active: true
     autoCorrect: true
-  SpacingAroundDoubleBangOperator:
-    active: false
   SpacingAroundKeyword:
     active: true
     autoCorrect: true
@@ -237,12 +227,6 @@ formatting:
   SpacingAroundRangeOperator:
     active: true
     autoCorrect: true
-  SpacingBetweenDeclarationsWithAnnotations:
-    active: false
-  SpacingBetweenDeclarationsWithComments:
-    active: false
-  SpacingBetweenDeclarationsWithoutComments:
-    active: false
   StringTemplate:
     active: true
     autoCorrect: true
@@ -453,8 +437,7 @@ style:
     active: false
   ObjectLiteralToLambda:
     active: true
-    OnlyOneExpressionWhenNot:
-    active: false
+    OnlyOneExpressionWhenNot: false
   OptionalAbstractKeyword:
     active: false
   OptionalUnit:

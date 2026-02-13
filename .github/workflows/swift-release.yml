@@ -1,0 +1,166 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to release (e.g., 1.2.3)'
+        required: true
+        type: string
+
+permissions:
+  contents: write
+
+jobs:
+  bump-version:
+    name: Bump Version
+    runs-on: macos-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Get Version from Tag or Input
+        id: get_version
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            VERSION="${{ github.event.inputs.version }}"
+            echo "Using manual version: $VERSION"
+          else
+            VERSION=${GITHUB_REF#refs/tags/v}
+            echo "Using tag version: $VERSION"
+          fi
+
+          # Validate version format (X.Y.Z)
+          if [[ ! "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "Error: Invalid version '$VERSION'. Expected format: X.Y.Z (e.g., 1.2.3)"
+            echo "When using workflow_dispatch, provide a version via the 'version' input."
+            echo "When pushing tags, use format: vX.Y.Z (e.g., v1.2.3)"
+            exit 1
+          fi
+
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
+
+      - name: Update Version in xcconfig
+        run: |
+          # Validate version format
+          if [[ ! "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "Error: Invalid version format '$VERSION'. Expected format: X.Y.Z"
+            exit 1
+          fi
+
+          # Update MARKETING_VERSION (CFBundleShortVersionString)
+          # Use | as delimiter to handle strings with /
+          sed -i '' "s|MARKETING_VERSION = .*|MARKETING_VERSION = $VERSION|" Config/Shared.xcconfig
+
+          # Extract and increment build number
+          CURRENT_BUILD=$(grep "CURRENT_PROJECT_VERSION" Config/Shared.xcconfig | awk '{print $3}')
+          NEW_BUILD=$((CURRENT_BUILD + 1))
+          sed -i '' "s|CURRENT_PROJECT_VERSION = .*|CURRENT_PROJECT_VERSION = $NEW_BUILD|" Config/Shared.xcconfig
+
+          echo "Updated version to $VERSION ($NEW_BUILD)"
+          echo "BUILD_NUMBER=$NEW_BUILD" >> $GITHUB_ENV
+
+      - name: Commit Version Bump
+        run: |
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+          git add Config/Shared.xcconfig
+          git commit -m "chore(release): bump version to ${VERSION} (build ${BUILD_NUMBER})"
+          git push
+
+    outputs:
+      version: ${{ steps.get_version.outputs.version }}
+
+  # Job 2: Build iOS app
+  build-ios:
+    name: Build iOS App
+    runs-on: macos-latest
+    needs: bump-version
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v6
+
+      - name: Cache Xcode Build
+        uses: actions/cache@v5
+        with:
+          path: |
+            ~/Library/Developer/Xcode/DerivedData
+            .build
+          key: ${{ runner.os }}-xcode-${{ needs.bump-version.outputs.version }}-${{ hashFiles('**/*.swift', '**/Package.swift', 'FileTransfer.xcodeproj/**') }}
+          restore-keys: |
+            ${{ runner.os }}-xcode-${{ needs.bump-version.outputs.version }}-
+            ${{ runner.os }}-xcode-
+
+      - name: Build iOS App (Release)
+        run: |
+          VERSION="${{ needs.bump-version.outputs.version }}"
+          xcodebuild -workspace FileTransfer.xcworkspace \
+            -scheme FileTransfer \
+            -configuration Release \
+            -destination 'generic/platform=iOS' \
+            -derivedDataPath DerivedData \
+            -archivePath DerivedData/Archive/FileTransfer.xcarchive \
+            archive \
+            CODE_SIGN_IDENTITY="" \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGNING_ALLOWED=NO \
+            ENABLE_BITCODE=NO \
+            | xcbeautify || true
+
+      - name: Export IPA
+        run: |
+          VERSION="${{ needs.bump-version.outputs.version }}"
+          # Create IPA from archive
+          mkdir -p BuildOutput
+
+          # Copy app bundle from archive
+          cp -R DerivedData/Archive/BuildProductsPath/*.xcarchive/Products/Applications/*.app BuildOutput/
+
+          # Create IPA structure
+          mkdir -p BuildOutput/Payload
+          cp -R BuildOutput/*.app BuildOutput/Payload/
+          cd BuildOutput && zip -r FileTransfer-v${VERSION}.ipa Payload/ && cd ..
+
+      - name: Upload Build Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: FileTransfer-iOS
+          path: BuildOutput/*.ipa
+          if-no-files-found: error
+
+  # Job 3: Create GitHub Release
+  release:
+    name: Create GitHub Release
+    runs-on: ubuntu-latest
+    needs: [bump-version, build-ios]
+
+    steps:
+      - name: Download Build Artifacts
+        uses: actions/download-artifact@v7
+        with:
+          path: .
+
+      - name: List Downloaded Files
+        run: ls -R
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          tag_name: v${{ needs.bump-version.outputs.version }}
+          name: FileTransfer v${{ needs.bump-version.outputs.version }}
+          files: |
+            ./*/*.ipa
+          fail_on_unmatched_files: true
+          draft: false
+          prerelease: false
+          generate_release_notes: true

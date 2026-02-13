@@ -102,13 +102,22 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v6
 
-      - name: Cache derived data
-        uses: actions/cache@v5
+      - name: Restore derived data
+        id: restore-derived
+        if: ${{ runner.debug != '1' }}
+        uses: actions/cache/restore@v4
         with:
           path: ./DerivedData
-          key: xcode-derived-${{ runner.os }}-${{ inputs.project_name }}-${{ hashFiles(format('{0}.xcodeproj/project.pbxproj', inputs.project_name), format('{0}.xcworkspace/xcuserdata/**', inputs.project_name), '**/Package.resolved') }}
+          key: xcode-derived-${{ runner.os }}-${{ inputs.project_name }}-${{ hashFiles(format('{0}.xcodeproj/project.pbxproj', inputs.project_name), format('{0}.xcworkspace/xcuserdata/**', inputs.project_name), '**/Package.swift', '**/Package.resolved') }}
           restore-keys: |
             xcode-derived-${{ runner.os }}-${{ inputs.project_name }}-
+
+      - name: Cache derived data
+        if: steps.restore-derived.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v4
+        with:
+          path: ./DerivedData
+          key: xcode-derived-${{ runner.os }}-${{ inputs.project_name }}-${{ hashFiles(format('{0}.xcodeproj/project.pbxproj', inputs.project_name), format('{0}.xcworkspace/xcuserdata/**', inputs.project_name), '**/Package.swift', '**/Package.resolved') }}
 
       - name: Install xcbeautify
         run: brew install xcbeautify
@@ -131,23 +140,33 @@ jobs:
         shell: bash
         run: |
           DEST="${{ steps.dest.outputs.dest }}"
-          set -o pipefail && xcodebuild ${{ inputs.use_workspace == true && '-workspace' || '-project' }} ${{ inputs.project_name }}${{ inputs.use_workspace == true && '.xcworkspace' || '.xcodeproj' }} -scheme ${{ inputs.project_name }} -configuration Debug -destination "$DEST" -derivedDataPath ./DerivedData build OTHER_SWIFT_FLAGS="-Xfrontend -strict-concurrency=complete" CODE_SIGNING_ALLOWED=NO | xcbeautify
+          set -o pipefail && xcodebuild ${{ inputs.use_workspace == true && '-workspace' || '-project' }} ${{ inputs.project_name }}${{ inputs.use_workspace == true && '.xcworkspace' || '.xcodeproj' }} -scheme ${{ inputs.project_name }} -configuration Debug -destination "$DEST" -derivedDataPath ./DerivedData -build-for-testing OTHER_SWIFT_FLAGS="-Xfrontend -strict-concurrency=complete" CODE_SIGNING_ALLOWED=NO | xcbeautify
 
   unit_tests:
     runs-on: ${{ inputs.runner || 'macos-26' }}
+    needs: build
     if: ${{ inputs.run_unit_tests }}
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v6
 
-      - name: Cache derived data
-        uses: actions/cache@v4
+      - name: Restore derived data
+        id: restore-derived
+        if: ${{ runner.debug != '1' }}
+        uses: actions/cache/restore@v4
         with:
           path: ./DerivedData
-          key: xcode-derived-${{ runner.os }}-${{ inputs.project_name }}-${{ hashFiles(format('{0}.xcodeproj/project.pbxproj', inputs.project_name), format('{0}.xcworkspace/xcuserdata/**', inputs.project_name), '**/Package.resolved') }}
+          key: xcode-derived-${{ runner.os }}-${{ inputs.project_name }}-${{ hashFiles(format('{0}.xcodeproj/project.pbxproj', inputs.project_name), format('{0}.xcworkspace/xcuserdata/**', inputs.project_name), '**/Package.swift', '**/Package.resolved') }}
           restore-keys: |
             xcode-derived-${{ runner.os }}-${{ inputs.project_name }}-
+
+      - name: Cache derived data
+        if: steps.restore-derived.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v4
+        with:
+          path: ./DerivedData
+          key: xcode-derived-${{ runner.os }}-${{ inputs.project_name }}-${{ hashFiles(format('{0}.xcodeproj/project.pbxproj', inputs.project_name), format('{0}.xcworkspace/xcuserdata/**', inputs.project_name), '**/Package.swift', '**/Package.resolved') }}
 
       - name: Install xcbeautify
         run: brew install xcbeautify
@@ -168,19 +187,29 @@ jobs:
 
   ui_tests:
     runs-on: ${{ inputs.runner || 'macos-26' }}
+    needs: build
     if: ${{ inputs.run_ui_tests }}
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v6
 
-      - name: Cache derived data
-        uses: actions/cache@v4
+      - name: Restore derived data
+        id: restore-derived
+        if: ${{ runner.debug != '1' }}
+        uses: actions/cache/restore@v4
         with:
           path: ./DerivedData
-          key: xcode-derived-${{ runner.os }}-${{ inputs.project_name }}-${{ hashFiles(format('{0}.xcodeproj/project.pbxproj', inputs.project_name), format('{0}.xcworkspace/xcuserdata/**', inputs.project_name), '**/Package.resolved') }}
+          key: xcode-derived-${{ runner.os }}-${{ inputs.project_name }}-${{ hashFiles(format('{0}.xcodeproj/project.pbxproj', inputs.project_name), format('{0}.xcworkspace/xcuserdata/**', inputs.project_name), '**/Package.swift', '**/Package.resolved') }}
           restore-keys: |
             xcode-derived-${{ runner.os }}-${{ inputs.project_name }}-
+
+      - name: Cache derived data
+        if: steps.restore-derived.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v4
+        with:
+          path: ./DerivedData
+          key: xcode-derived-${{ runner.os }}-${{ inputs.project_name }}-${{ hashFiles(format('{0}.xcodeproj/project.pbxproj', inputs.project_name), format('{0}.xcworkspace/xcuserdata/**', inputs.project_name), '**/Package.swift', '**/Package.resolved') }}
 
       - name: Install xcbeautify
         run: brew install xcbeautify

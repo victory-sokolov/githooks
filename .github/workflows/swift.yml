@@ -105,7 +105,7 @@ jobs:
       - name: Restore derived data
         id: restore-derived
         if: ${{ runner.debug != '1' }}
-        uses: actions/cache/restore@v4
+        uses: actions/cache/restore@v5
         with:
           path: ./DerivedData
           key: xcode-derived-${{ runner.os }}-${{ inputs.project_name }}-${{ hashFiles(format('{0}.xcodeproj/project.pbxproj', inputs.project_name), format('{0}.xcworkspace/xcuserdata/**', inputs.project_name), '**/Package.swift', '**/Package.resolved') }}
@@ -114,7 +114,7 @@ jobs:
 
       - name: Cache derived data
         if: steps.restore-derived.outputs.cache-hit != 'true'
-        uses: actions/cache/save@v4
+        uses: actions/cache/save@v5
         with:
           path: ./DerivedData
           key: xcode-derived-${{ runner.os }}-${{ inputs.project_name }}-${{ hashFiles(format('{0}.xcodeproj/project.pbxproj', inputs.project_name), format('{0}.xcworkspace/xcuserdata/**', inputs.project_name), '**/Package.swift', '**/Package.resolved') }}
@@ -154,7 +154,7 @@ jobs:
       - name: Restore derived data
         id: restore-derived
         if: ${{ runner.debug != '1' }}
-        uses: actions/cache/restore@v4
+        uses: actions/cache/restore@v5
         with:
           path: ./DerivedData
           key: xcode-derived-${{ runner.os }}-${{ inputs.project_name }}-${{ hashFiles(format('{0}.xcodeproj/project.pbxproj', inputs.project_name), format('{0}.xcworkspace/xcuserdata/**', inputs.project_name), '**/Package.swift', '**/Package.resolved') }}
@@ -163,7 +163,7 @@ jobs:
 
       - name: Cache derived data
         if: steps.restore-derived.outputs.cache-hit != 'true'
-        uses: actions/cache/save@v4
+        uses: actions/cache/save@v5
         with:
           path: ./DerivedData
           key: xcode-derived-${{ runner.os }}-${{ inputs.project_name }}-${{ hashFiles(format('{0}.xcodeproj/project.pbxproj', inputs.project_name), format('{0}.xcworkspace/xcuserdata/**', inputs.project_name), '**/Package.swift', '**/Package.resolved') }}
@@ -197,7 +197,7 @@ jobs:
       - name: Restore derived data
         id: restore-derived
         if: ${{ runner.debug != '1' }}
-        uses: actions/cache/restore@v4
+        uses: actions/cache/restore@v5
         with:
           path: ./DerivedData
           key: xcode-derived-${{ runner.os }}-${{ inputs.project_name }}-${{ hashFiles(format('{0}.xcodeproj/project.pbxproj', inputs.project_name), format('{0}.xcworkspace/xcuserdata/**', inputs.project_name), '**/Package.swift', '**/Package.resolved') }}
@@ -206,7 +206,7 @@ jobs:
 
       - name: Cache derived data
         if: steps.restore-derived.outputs.cache-hit != 'true'
-        uses: actions/cache/save@v4
+        uses: actions/cache/save@v5
         with:
           path: ./DerivedData
           key: xcode-derived-${{ runner.os }}-${{ inputs.project_name }}-${{ hashFiles(format('{0}.xcodeproj/project.pbxproj', inputs.project_name), format('{0}.xcworkspace/xcuserdata/**', inputs.project_name), '**/Package.swift', '**/Package.resolved') }}

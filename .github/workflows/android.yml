@@ -168,7 +168,7 @@ jobs:
         uses: gradle/actions/setup-gradle@v3
 
       - name: Cache Gradle wrappers
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: |
             ~/.gradle/wrapper
@@ -242,7 +242,7 @@ jobs:
         uses: gradle/actions/setup-gradle@v3
 
       - name: Cache Gradle wrappers
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: |
             ~/.gradle/wrapper
@@ -252,7 +252,7 @@ jobs:
             ${{ runner.os }}-gradle-wrapper-
 
       - name: Cache Gradle dependencies
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: |
             ~/.gradle/caches
@@ -264,7 +264,7 @@ jobs:
             ${{ runner.os }}-gradle-deps-
 
       - name: Cache Gradle build cache
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: |
             ~/.gradle/caches/build-cache-*
@@ -274,7 +274,7 @@ jobs:
             ${{ runner.os }}-gradle-build-
 
       - name: Restore build outputs
-        uses: actions/cache/restore@v4
+        uses: actions/cache/restore@v5
         with:
           path: |
             **/build/
@@ -330,7 +330,7 @@ jobs:
         uses: gradle/actions/setup-gradle@v3
 
       - name: Cache Gradle wrappers
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: |
             ~/.gradle/wrapper
@@ -340,7 +340,7 @@ jobs:
             ${{ runner.os }}-gradle-wrapper-
 
       - name: Cache Gradle dependencies
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: |
             ~/.gradle/caches

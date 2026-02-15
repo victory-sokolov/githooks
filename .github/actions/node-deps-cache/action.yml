@@ -5,9 +5,9 @@ inputs:
   package-manager:
     description: 'Package manager to use (auto, bun, pnpm, npm, yarn). Auto-detects if not specified.'
     required: false
-    default: 'auto'
+    default: 'bun'
   node-version:
-    description: 'Node.js version to use (for npm/pnpm/yarn)'
+    description: 'Node.js version to use'
     required: false
     default: 'lts/*'
   bun-version:

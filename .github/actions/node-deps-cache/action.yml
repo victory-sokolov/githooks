@@ -67,7 +67,7 @@ runs:
     - name: Node.js version
       if: steps.detect.outputs.package-manager != 'bun'
       shell: bash
-      run: echo "Using Node.js version: $(node --version)"
+      run: 'echo "Using Node.js version: $(node --version)"'
 
     - name: Setup pnpm
       if: steps.detect.outputs.package-manager == 'pnpm'

@@ -15,7 +15,10 @@ on:
         description: 'Whether to skip the build step'
         default: true
         type: boolean
-
+      node-version:
+        description: 'Node.js version to use'
+        default: '24'
+        type: string
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
@@ -35,7 +38,7 @@ jobs:
           if [ -f .nvmrc ]; then
             echo "NODE_VERSION=$(cat .nvmrc)" >> "$GITHUB_OUTPUT"
           else
-            echo "NODE_VERSION=24" >> "$GITHUB_OUTPUT"
+            echo "NODE_VERSION=${{ inputs.node-version }}" >> "$GITHUB_OUTPUT"
           fi
 
       - name: 📦 Setup dependencies with cache

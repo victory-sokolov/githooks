@@ -64,6 +64,11 @@ runs:
         cache: ${{ steps.detect.outputs.package-manager }}
         cache-dependency-path: ${{ inputs.working-directory }}/${{ steps.detect.outputs.package-manager == 'pnpm' && 'pnpm-lock.yaml' || steps.detect.outputs.package-manager == 'yarn' && 'yarn.lock' || 'package-lock.json' }}
 
+    - name: Node.js version
+      if: steps.detect.outputs.package-manager != 'bun'
+      shell: bash
+      run: echo "Using Node.js version: $(node --version)"
+
     - name: Setup pnpm
       if: steps.detect.outputs.package-manager == 'pnpm'
       uses: pnpm/action-setup@v4

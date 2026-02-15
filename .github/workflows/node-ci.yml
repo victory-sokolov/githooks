@@ -11,6 +11,10 @@ on:
         description: 'Whether to upload coverage reports'
         default: false
         type: boolean
+      skip-build:
+        description: 'Whether to skip the build step'
+        default: true
+        type: boolean
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
@@ -85,6 +89,15 @@ jobs:
             pnpm typecheck
           else
             bun run typecheck
+          fi
+
+      - name: 🔨 Run build
+        if: steps.scripts.outputs.build == 'true' && !inputs.skip-build
+        run: |
+          if [ "${{ inputs.package-manager }}" == "pnpm" ]; then
+            pnpm build
+          else
+            bun run build
           fi
 
       - uses: reviewdog/action-setup@d8edfce3dd5e1ec6978745e801f9c50b5ef80252 # v1.4.0

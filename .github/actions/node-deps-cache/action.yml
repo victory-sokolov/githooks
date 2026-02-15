@@ -9,7 +9,7 @@ inputs:
   node-version:
     description: 'Node.js version to use'
     required: false
-    default: 'lts/*'
+    default: '22'
   bun-version:
     description: 'Bun version to use'
     required: false
@@ -22,7 +22,6 @@ inputs:
     description: 'Working directory'
     required: false
     default: '.'
-
 
 outputs:
   package-manager:
@@ -95,9 +94,9 @@ runs:
       working-directory: ${{ inputs.working-directory }}
       run: |
         PM="${{ steps.detect.outputs.package-manager }}"
-        
+
         echo "Node.js version: $(node --version 2>/dev/null || echo 'Not available')"
-        
+
         case "$PM" in
           bun)
             bun install --frozen-lockfile

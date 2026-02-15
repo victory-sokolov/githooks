@@ -55,16 +55,14 @@ runs:
           echo "::warning::No lock file found, defaulting to npm"
         fi
 
-    - name: Setup Node.js (npm/pnpm/yarn)
-      if: steps.detect.outputs.package-manager != 'bun'
+    - name: Setup Node.js
       uses: actions/setup-node@v6
       with:
         node-version: ${{ inputs.node-version }}
-        cache: ${{ steps.detect.outputs.package-manager }}
+        cache: ${{ steps.detect.outputs.package-manager != 'bun' && steps.detect.outputs.package-manager || '' }}
         cache-dependency-path: ${{ inputs.working-directory }}/${{ steps.detect.outputs.package-manager == 'pnpm' && 'pnpm-lock.yaml' || steps.detect.outputs.package-manager == 'yarn' && 'yarn.lock' || 'package-lock.json' }}
 
     - name: Node.js version
-      if: steps.detect.outputs.package-manager != 'bun'
       shell: bash
       run: 'echo "Using Node.js version: $(node --version)"'
 

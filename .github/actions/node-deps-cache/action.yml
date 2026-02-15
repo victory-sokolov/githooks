@@ -96,6 +96,8 @@ runs:
       run: |
         PM="${{ steps.detect.outputs.package-manager }}"
         
+        echo "Node.js version: $(node --version 2>/dev/null || echo 'Not available')"
+        
         case "$PM" in
           bun)
             bun install --frozen-lockfile

@@ -16,7 +16,7 @@ on:
       package-manager:
         description: 'Package manager to use (npm, pnpm, or bun)'
         required: false
-        default: 'npm'
+        default: 'bun'
         type: string
 
 concurrency:
@@ -45,19 +45,19 @@ jobs:
       - name: 📦 Setup dependencies with cache
         uses: victory-sokolov/githooks/.github/actions/node-deps-cache@main
         with:
-          package-manager: "${{ inputs.package-manager }}"
-          node-version: "${{ steps.nvm.outputs.NODE_VERSION }}"
-          working-directory: "${{ inputs.working-directory }}"
+          package-manager: '${{ inputs.package-manager }}'
+          node-version: '${{ steps.nvm.outputs.NODE_VERSION }}'
+          working-directory: '${{ inputs.working-directory }}'
 
       - name: Cache Next.js build outputs
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: ${{ inputs.working-directory }}/.next/cache
           key: ${{ runner.os }}-nextjs-${{ hashFiles(format('{0}/package-lock.json', inputs.working-directory), format('{0}/pnpm-lock.yaml', inputs.working-directory), format('{0}/bun.lockb', inputs.working-directory)) }}
           restore-keys: |
             ${{ runner.os }}-nextjs-
 
-      - name: Build Next.js app
+      - name: 🏗️ Run build
         run: |
           if [ "${{ inputs.package-manager }}" == "pnpm" ]; then
             pnpm run build
@@ -87,11 +87,16 @@ jobs:
           else
             npm run export
           fi
-        # Note: 'next export' is deprecated in Next.js 13+. For static export, configure output: 'export' in next.config.js and use 'next build' instead.
 
-      - name: Upload build artifacts
+      - name: 📤 Upload build artifacts
+        if: success() || failure()
         uses: actions/upload-artifact@v6
         with:
-          name: nextjs-build
-          path: ${{ inputs.working-directory }}/out/
-          retention-days: 30
+          name: build-artifacts-${{ inputs.package-manager }}
+          path: |
+            dist/
+            build/
+            .next/
+            out/
+          retention-days: 7
+          compression-level: 6

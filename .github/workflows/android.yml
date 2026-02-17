@@ -165,7 +165,7 @@ jobs:
           java-version: ${{ inputs.java_version }}
 
       - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@v3
+        uses: gradle/actions/setup-gradle@v5
 
       - name: Cache Gradle wrappers
         uses: actions/cache@v4
@@ -239,7 +239,7 @@ jobs:
           java-version: ${{ inputs.java_version }}
 
       - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@v3
+        uses: gradle/actions/setup-gradle@v5
 
       - name: Cache Gradle wrappers
         uses: actions/cache@v4
@@ -327,7 +327,7 @@ jobs:
           java-version: ${{ inputs.java_version }}
 
       - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@v3
+        uses: gradle/actions/setup-gradle@v5
 
       - name: Cache Gradle wrappers
         uses: actions/cache@v4

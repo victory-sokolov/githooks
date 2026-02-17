@@ -1,0 +1,31 @@
+name: Reusable Dead Links Check
+
+on:
+  workflow_call:
+    inputs:
+      files:
+        description: 'Files or globs to check'
+        required: false
+        default: './**/*.md ./**/*.html'
+        type: string
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  dead-links:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v6
+
+      - name: 🔗 Check dead URLs and image links
+        uses: lycheeverse/lychee-action@v2
+        with:
+          args: --verbose --no-progress --accept 200,429 ${{ inputs.files }}
+          fail: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -64,7 +64,7 @@ jobs:
         run: |
           KTLINT_URL="https://github.com/pinterest/ktlint/releases/download/${KTLINT_VERSION}/ktlint"
           echo "Downloading ktlint ${KTLINT_VERSION} from ${KTLINT_URL}"
-          curl -sSLO ${KTLINT_URL} -o ${{ env.KTLINT_CACHE_DIR }}/ktlint
+          curl -sSLO "${KTLINT_URL}" -o ${{ env.KTLINT_CACHE_DIR }}/ktlint
           chmod +x ${{ env.KTLINT_CACHE_DIR }}/ktlint
           ${{ env.KTLINT_CACHE_DIR }}/ktlint --version
 

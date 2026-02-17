@@ -99,13 +99,13 @@ jobs:
 
           if [ -n "$COMMENT_ID" ]; then
             # Get current comment body
-            BODY=$(gh api repos/${{ github.repository }}/issues/comments/$COMMENT_ID --jq '.body')
+            BODY=$(gh api repos/${{ github.repository }}/issues/comments/"$COMMENT_ID" --jq '.body')
 
             # Remove the "Create PR" link and any trailing pipe/whitespace
             CLEANED=$(echo "$BODY" | sed 's/ • \[Create PR ➔\]([^)]*)//g' | sed 's/[[:space:]]*|[[:space:]]*$//')
 
             # Update the comment
-            gh api repos/${{ github.repository }}/issues/comments/$COMMENT_ID \
+            gh api repos/${{ github.repository }}/issues/comments/"$COMMENT_ID" \
               -X PATCH \
               -f body="$CLEANED"
           fi

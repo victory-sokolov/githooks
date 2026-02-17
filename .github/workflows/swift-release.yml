@@ -45,8 +45,8 @@ jobs:
             exit 1
           fi
 
-          echo "version=$VERSION" >> $GITHUB_OUTPUT
-          echo "VERSION=$VERSION" >> $GITHUB_ENV
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "VERSION=$VERSION" >> "$GITHUB_ENV"
 
       - name: Update Version in xcconfig
         run: |
@@ -66,7 +66,7 @@ jobs:
           sed -i '' "s|CURRENT_PROJECT_VERSION = .*|CURRENT_PROJECT_VERSION = $NEW_BUILD|" Config/Shared.xcconfig
 
           echo "Updated version to $VERSION ($NEW_BUILD)"
-          echo "BUILD_NUMBER=$NEW_BUILD" >> $GITHUB_ENV
+          echo "BUILD_NUMBER=$NEW_BUILD" >> "$GITHUB_ENV"
 
       - name: Commit Version Bump
         run: |
@@ -102,7 +102,6 @@ jobs:
 
       - name: Build iOS App (Release)
         run: |
-          VERSION="${{ needs.bump-version.outputs.version }}"
           xcodebuild -workspace FileTransfer.xcworkspace \
             -scheme FileTransfer \
             -configuration Release \

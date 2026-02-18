@@ -8,6 +8,7 @@ This repository contains reusable GitHub Actions workflows for various automatio
 ### 2. **Auto-merge Dependabot PR Workflow** - For automated Dependabot PR management
 ### 3. **Swift CI Workflow** - For Swift projects with linting, building, and testing
 ### 4. **Dead Links Workflow** - For checking dead URLs and image links
+### 5. **NPM Release Workflow** - For releasing packages to npm or GitHub Packages
 
 ## 🚀 Quick Start
 
@@ -189,6 +190,89 @@ jobs:
 
 - Your repository must contain Swift code (Package.swift or .swift files)
 - macOS runners are used for compatibility with Swift tools
+
+## 🚀 NPM Release Workflow
+
+The NPM Release workflow handles semantic versioning and publishing packages to npm or GitHub Packages.
+
+### 🔧 Configuration Options
+
+| Input | Description | Default | Required |
+|-------|-------------|---------|----------|
+| `package-manager` | Package manager: `bun`, `pnpm`, `npm`, or `yarn` | `bun` | No |
+| `node-version` | Node.js version to use | `24` | No |
+| `registry` | Registry to publish to: `npm` or `github` | `github` | No |
+| `package-scope` | Package scope for GitHub registry (e.g., `@victory-sokolov`) | - | For GitHub |
+| `package-name` | Package name without scope (for publish check) | - | For GitHub |
+
+### 📋 Usage Examples
+
+#### Release to npm Registry
+
+```yaml
+name: Release
+
+on:
+  workflow_run:
+    workflows: ['CI']
+    types:
+      - completed
+    branches:
+      - main
+
+jobs:
+  release:
+    uses: victory-sokolov/githooks/.github/workflows/npm-release-reusable.yml@main
+    with:
+      package-manager: npm
+      registry: npm
+    secrets:
+      NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+```
+
+#### Release to GitHub Packages
+
+```yaml
+name: Release
+
+on:
+  workflow_dispatch:
+
+jobs:
+  release:
+    uses: victory-sokolov/githooks/.github/workflows/npm-release-reusable.yml@main
+    with:
+      package-manager: bun
+      node-version: '24'
+      registry: github
+      package-scope: '@victory-sokolov'
+      package-name: 'my-package'
+```
+
+### 🎯 How It Works
+
+1. **Setup**: Installs dependencies using the `node-deps-cache` action
+2. **Build**: Runs build step
+3. **Semantic Release**: Creates release with semantic-release
+4. **Publish**: Publishes to npm or GitHub Packages (skips if version already exists)
+
+### 🔒 Required Permissions
+
+For GitHub Packages:
+```yaml
+permissions:
+  contents: write
+  issues: write
+  pull-requests: write
+  packages: write
+```
+
+### ⚠️ Requirements
+
+- `semantic-release` configured in your project
+- For npm: `NPM_TOKEN` secret must be set
+- For GitHub Packages: `package-scope` and `package-name` must be provided
+- Your `package.json` must have the correct scope for GitHub Packages
 
 ## 📦 Package Manager Examples
 

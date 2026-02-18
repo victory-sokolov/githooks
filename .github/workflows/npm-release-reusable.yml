@@ -1,0 +1,103 @@
+name: Reusable NPM Release
+
+on:
+  workflow_call:
+    inputs:
+      package-manager:
+        description: 'Package manager to use (bun, pnpm, npm, yarn)'
+        default: 'bun'
+        type: string
+      node-version:
+        description: 'Node.js version to use'
+        default: '24'
+        type: string
+      registry:
+        description: 'Registry to publish to (npm or github)'
+        default: 'github'
+        type: string
+      package-scope:
+        description: 'Package scope for GitHub registry (e.g., @username)'
+        required: false
+        type: string
+      package-name:
+        description: 'Package name for publish check (without scope)'
+        required: false
+        type: string
+
+    secrets:
+      NPM_TOKEN:
+        description: 'NPM token for publishing to npm registry'
+        required: false
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      issues: write
+      pull-requests: write
+      packages: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Read .nvmrc if exists
+        id: nvm
+        run: |
+          if [ -f .nvmrc ]; then
+            echo "NODE_VERSION=$(cat .nvmrc)" >> "$GITHUB_OUTPUT"
+          else
+            echo "NODE_VERSION=${{ inputs.node-version }}" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Setup dependencies with cache
+        uses: victory-sokolov/githooks/.github/actions/node-deps-cache@main
+        with:
+          package-manager: ${{ inputs.package-manager }}
+          node-version: ${{ steps.nvm.outputs.NODE_VERSION }}
+        env:
+          HUSKY: 0
+
+      - name: Build
+        run: |
+          case "${{ inputs.package-manager }}" in
+            bun) bun run build ;;
+            pnpm) pnpm build ;;
+            yarn) yarn build ;;
+            npm) npm run build ;;
+          esac
+
+      - name: Setup Node.js for GitHub Packages
+        if: inputs.registry == 'github'
+        uses: actions/setup-node@v6
+        with:
+          node-version: ${{ steps.nvm.outputs.NODE_VERSION }}
+          registry-url: 'https://npm.pkg.github.com'
+          scope: ${{ inputs.package-scope }}
+
+      - name: Release with semantic-release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NPM_TOKEN: ${{ inputs.registry == 'npm' && secrets.NPM_TOKEN || secrets.GITHUB_TOKEN }}
+        run: npx semantic-release
+
+      - name: Publish to GitHub Packages
+        if: inputs.registry == 'github' && inputs.package-scope != '' && inputs.package-name != ''
+        run: |
+          FULL_PKG_NAME="${{ inputs.package-scope }}/${{ inputs.package-name }}"
+          PKG_VERSION=$(node -p "require('./package.json').version")
+          PUBLISHED=$(npm view $FULL_PKG_NAME version 2>/dev/null || echo "none")
+          if [ "$PKG_VERSION" = "$PUBLISHED" ]; then
+            echo "Version $PKG_VERSION already published, skipping"
+          else
+            npm publish
+          fi
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

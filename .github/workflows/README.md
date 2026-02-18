@@ -7,6 +7,7 @@ This repository contains reusable GitHub Actions workflows for various automatio
 ### 1. **Node.js CI Workflow** - For Node.js projects with bun/pnpm support
 ### 2. **Auto-merge Dependabot PR Workflow** - For automated Dependabot PR management
 ### 3. **Swift CI Workflow** - For Swift projects with linting, building, and testing
+### 4. **Dead Links Workflow** - For checking dead URLs and image links
 
 ## 🚀 Quick Start
 

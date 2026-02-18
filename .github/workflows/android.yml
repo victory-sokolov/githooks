@@ -274,7 +274,7 @@ jobs:
             ${{ runner.os }}-gradle-build-
 
       - name: Restore build outputs
-        uses: actions/cache/restore@v4
+        uses: actions/cache/restore@v5
         with:
           path: |
             **/build/
@@ -299,7 +299,7 @@ jobs:
 
       - name: Publish test report
         if: always()
-        uses: mikepenz/action-junit-report@v4
+        uses: mikepenz/action-junit-report@v6
         with:
           report_paths: '**/build/test-results/testDebugUnitTest/**/*.xml'
           detailed_summary: true

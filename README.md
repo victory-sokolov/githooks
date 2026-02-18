@@ -122,6 +122,19 @@ This repository provides reusable GitHub Actions workflows for common CI/CD task
       uses: your-org/githooks/.github/workflows/swift.yml@main
   ```
 
+#### `dead-links.yml`
+- **Purpose**: Checks Markdown/HTML dead URLs and image links
+- **Features**:
+  - Validates links with Lychee
+  - Supports custom file globs through workflow inputs
+- **Inputs**: `files` (optional, defaults to `./**/*.md ./**/*.html`)
+- **Usage Example**:
+  ```yaml
+  jobs:
+    links:
+      uses: your-org/githooks/.github/workflows/dead-links.yml@main
+  ```
+
 ### Example/Template Workflows
 
 #### `code-review.yml`

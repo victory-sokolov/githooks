@@ -1,0 +1,119 @@
+name: Build and Push Django Image to Google Cloud Platform
+on:
+  workflow_call:
+    inputs:
+      image_name:
+        description: 'Docker image name'
+        required: true
+        type: string
+      project_id:
+        description: 'GCP project ID'
+        required: true
+        type: string
+      docker_repository:
+        description: 'Artifact Registry repository name'
+        required: true
+        type: string
+      gcp_region:
+        description: 'GCP region for Artifact Registry and Cloud Run'
+        required: true
+        type: string
+      dockerfile_path:
+        description: 'Path to Dockerfile'
+        required: false
+        type: string
+        default: '.'
+      version_bump:
+        description: 'Version bump type (major, minor, patch)'
+        required: false
+        type: string
+        default: 'minor'
+    secrets:
+      gcp_credentials:
+        description: 'GCP service account credentials JSON'
+        required: true
+  workflow_dispatch:
+    inputs:
+      image_name:
+        description: 'Docker image name'
+        required: true
+        type: string
+      project_id:
+        description: 'GCP project ID'
+        required: true
+        type: string
+      docker_repository:
+        description: 'Artifact Registry repository name'
+        required: true
+        type: string
+      gcp_region:
+        description: 'GCP region for Artifact Registry and Cloud Run'
+        required: true
+        type: string
+      dockerfile_path:
+        description: 'Path to Dockerfile'
+        required: false
+        type: string
+        default: '.'
+      version_bump:
+        description: 'Version bump type (major, minor, patch)'
+        required: false
+        type: string
+        default: 'minor'
+
+jobs:
+  build-push-gcr:
+    name: Build and Push to GCP
+    runs-on: ubuntu-latest
+    env:
+      IMAGE_NAME: ${{ inputs.image_name }}
+      PROJECT_ID: ${{ inputs.project_id }}
+      REGISTRY_NAME: ${{ inputs.docker_repository }}
+      GCP_REGION: ${{ inputs.gcp_region }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - uses: 'google-github-actions/auth@v2'
+        with:
+          project_id: ${{ env.PROJECT_ID }}
+          credentials_json: '${{ secrets.gcp_credentials }}'
+
+      - uses: google-github-actions/setup-gcloud@v2
+        with:
+          project_id: ${{ env.PROJECT_ID }}
+
+      - name: Build Docker Image
+        run: docker build -t $IMAGE_NAME:latest ${{ inputs.dockerfile_path }}
+
+      - name: Automatic Tagging of Releases
+        id: increment-git-tag
+        run: |
+          bash ./scripts/git_update.sh -v ${{ inputs.version_bump }}
+
+      - name: Configure Docker Client
+        run: |-
+          gcloud auth configure-docker --quiet
+          gcloud auth configure-docker $GCP_REGION-docker.pkg.dev --quiet
+
+      - name: Push Docker Image to Container Registry (GCR)
+        env:
+          GIT_TAG: ${{ steps.increment-git-tag.outputs.git-tag }}
+        run: |-
+          docker tag $IMAGE_NAME:latest gcr.io/$PROJECT_ID/$IMAGE_NAME:latest
+          docker tag $IMAGE_NAME:latest gcr.io/$PROJECT_ID/$IMAGE_NAME:$GIT_TAG
+          docker push gcr.io/$PROJECT_ID/$IMAGE_NAME:latest
+          docker push gcr.io/$PROJECT_ID/$IMAGE_NAME:$GIT_TAG
+
+      - name: Push Docker Image to Artifact Registry
+        env:
+          GIT_TAG: ${{ steps.increment-git-tag.outputs.git-tag }}
+        run: |-
+          docker tag $IMAGE_NAME:latest $GCP_REGION-docker.pkg.dev/$PROJECT_ID/$REGISTRY_NAME/$IMAGE_NAME:latest
+          docker tag $IMAGE_NAME:latest $GCP_REGION-docker.pkg.dev/$PROJECT_ID/$REGISTRY_NAME/$IMAGE_NAME:$GIT_TAG
+          docker push $GCP_REGION-docker.pkg.dev/$PROJECT_ID/$REGISTRY_NAME/$IMAGE_NAME:latest
+          docker push $GCP_REGION-docker.pkg.dev/$PROJECT_ID/$REGISTRY_NAME/$IMAGE_NAME:$GIT_TAG
+
+      - name: Deploy to Cloud Run
+        run: |
+          gcloud run deploy $REGISTRY_NAME --image $GCP_REGION-docker.pkg.dev/$PROJECT_ID/$REGISTRY_NAME/$IMAGE_NAME:latest --region $GCP_REGION --platform managed

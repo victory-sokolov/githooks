@@ -1,14 +1,22 @@
 # Reusable GitHub Actions Workflows
 
-This repository contains reusable GitHub Actions workflows for various automation tasks including Node.js CI and Dependabot PR management.
+This repository contains reusable GitHub Actions workflows for various automation tasks including Node.js CI, security scanning, and Dependabot PR management.
 
 ## 📋 Available Workflows
 
-### 1. **Node.js CI Workflow** - For Node.js projects with bun/pnpm support
-### 2. **Auto-merge Dependabot PR Workflow** - For automated Dependabot PR management
-### 3. **Swift CI Workflow** - For Swift projects with linting, building, and testing
-### 4. **Dead Links Workflow** - For checking dead URLs and image links
-### 5. **NPM Release Workflow** - For releasing packages to npm or GitHub Packages
+### CI/CD Workflows
+1. **Node.js CI Workflow** - For Node.js projects with bun/pnpm support
+2. **Swift CI Workflow** - For Swift projects with linting, building, and testing
+3. **NPM Release Workflow** - For releasing packages to npm or GitHub Packages
+4. **Dead Links Workflow** - For checking dead URLs and image links
+
+### Security Workflows
+5. **Trivy Security Scan** - Reusable workflow for vulnerability, secret, and misconfiguration scanning
+6. **Security Scan** - Combined security scanning with SARIF upload to GitHub Security tab
+
+### Infrastructure Workflows
+7. **Terraform Quality Checks** - For Terraform projects with fmt, validate, and plan
+8. **Auto-merge Dependabot PR Workflow** - For automated Dependabot PR management
 
 ## 🚀 Quick Start
 

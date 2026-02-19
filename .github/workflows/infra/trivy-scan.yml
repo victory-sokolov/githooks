@@ -1,0 +1,138 @@
+# Reusable Trivy Security Scanning Workflow
+# Can be called from other repositories via workflow_call
+#
+# Usage:
+#   jobs:
+#     security:
+#       uses: victory-sokolov/githooks/.github/workflows/infra/trivy-scan.yml@main
+#       with:
+#         scan-type: 'config'
+#
+# Note: Uses trivy.yaml from githooks repo by default. Override by adding trivy.yaml to your repo.
+
+name: Trivy Security Scan
+
+on:
+  workflow_call:
+    inputs:
+      scan-type:
+        description: 'Trivy scan type (fs, config, image)'
+        required: false
+        default: 'config'
+        type: string
+      upload-sarif:
+        description: 'Upload SARIF to GitHub Security tab'
+        required: false
+        default: true
+        type: boolean
+      ignore-unfixed:
+        description: 'Ignore vulnerabilities with no fix available'
+        required: false
+        default: true
+        type: boolean
+      format:
+        description: 'Output format (table, json, sarif)'
+        required: false
+        default: 'sarif'
+        type: string
+      artifact-retention:
+        description: 'Days to retain scan artifacts'
+        required: false
+        default: 5
+        type: number
+    secrets:
+      github-token:
+        description: 'GitHub token for private module access and SARIF upload'
+        required: false
+
+permissions:
+  contents: read
+  security-events: write
+  actions: read
+
+env:
+  TRIVY_CONFIG_URL: https://raw.githubusercontent.com/victory-sokolov/githooks/main/trivy.yaml
+
+jobs:
+  trivy-scan:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Setup Trivy
+        uses: aquasecurity/setup-trivy@v0.2.3
+        with:
+          version: latest
+
+      - name: Get current date
+        id: date
+        run: echo "date=$(date +'%Y-%m-%d')" >> "$GITHUB_OUTPUT"
+
+      - name: Setup Trivy config
+        run: |
+          # Use repo's trivy.yaml if present, otherwise download default from githooks
+          if [ ! -f "trivy.yaml" ]; then
+            curl -sL "$TRIVY_CONFIG_URL" -o trivy.yaml
+          fi
+
+      - name: Run Trivy scanner
+        id: scan
+        env:
+          TRIVY_DB_REPOSITORY: ghcr.io/aquasecurity/trivy-db:2
+          GITHUB_TOKEN: ${{ secrets.github-token || github.token }}
+        run: |
+          # Run appropriate scan type with defaults
+          case "${{ inputs.scan-type }}" in
+            config)
+              trivy --quiet --config trivy.yaml config \
+                --format ${{ inputs.format }} \
+                --output trivy-results.sarif \
+                --severity CRITICAL,HIGH \
+                --scanners vuln,secret,misconfig \
+                --exit-code 0 \
+                ${{ inputs.ignore-unfixed && '--ignore-unfixed' || '' }} \
+                "."
+              ;;
+            fs)
+              trivy --quiet --config trivy.yaml fs \
+                --format ${{ inputs.format }} \
+                --output trivy-results.sarif \
+                --severity CRITICAL,HIGH \
+                --scanners vuln,secret,misconfig \
+                --exit-code 0 \
+                ${{ inputs.ignore-unfixed && '--ignore-unfixed' || '' }} \
+                "."
+              ;;
+            image)
+              trivy --quiet --config trivy.yaml image \
+                --format ${{ inputs.format }} \
+                --output trivy-results.sarif \
+                --severity CRITICAL,HIGH \
+                --scanners vuln,secret,misconfig \
+                --exit-code 0 \
+                ${{ inputs.ignore-unfixed && '--ignore-unfixed' || '' }} \
+                "."
+              ;;
+          esac
+
+          echo "scan_exit_code=$?" >> "$GITHUB_OUTPUT"
+
+      - name: Upload SARIF results
+        if: inputs.upload-sarif && always()
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: trivy-results.sarif
+          category: trivy-${{ inputs.scan-type }}
+          wait-for-processing: false
+
+      - name: Upload scan artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: trivy-scan-${{ inputs.scan-type }}-${{ steps.date.outputs.date }}
+          path: |
+            trivy-results.sarif
+          retention-days: ${{ inputs.artifact-retention }}
+          if-no-files-found: warn

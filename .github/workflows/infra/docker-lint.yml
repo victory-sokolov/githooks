@@ -1,0 +1,43 @@
+name: Docker Lint
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main, master]
+    paths:
+      - 'Dockerfile'
+      - '**/Dockerfile*'
+      - '**/Dockerfile.*'
+      - 'docker-compose*.yml'
+      - 'compose.yml'
+      - '**/*.sh'
+
+jobs:
+  docker:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@master
+
+      - name: Lint Dockerfile using Checkov
+        id: checkov
+        uses: bridgecrewio/checkov-action@master
+        with:
+          directory: .
+          framework: dockerfile # Only ask for Dockerfile scans
+          quiet: true # Show only failed checks
+          container_user: 1000
+          # Skip adding User, healthcheck
+          skip_check: CKV_DOCKER_2,CKV_DOCKER_3
+
+      - name: Build an image from Dockerfile
+        run: docker build -t docker.io/victorysokolov/django-blog:${{ github.sha }} .
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@0.28.0
+        with:
+          image-ref: 'docker.io/victorysokolov/django-blog:${{ github.sha }}'
+          format: 'table'
+          exit-code: '1'
+          ignore-unfixed: true
+          vuln-type: 'os,library'
+          severity: 'CRITICAL,HIGH'

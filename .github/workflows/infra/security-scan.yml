@@ -1,0 +1,75 @@
+# Security Scanning Workflow
+# Scans repository for vulnerabilities, secrets, and misconfigurations
+#
+# Runs automatically on:
+#   - Push to master/main branch
+#   - Pull requests
+#   - Weekly schedule (Monday 00:00 UTC)
+#
+# Usage:
+#   jobs:
+#     security:
+#       uses: victory-sokolov/githooks/.github/workflows/infra/security-scan.yml@main
+
+name: Security Scan
+
+on:
+  push:
+    branches:
+      - master
+      - main
+  pull_request:
+    branches:
+      - master
+      - main
+  schedule:
+    # Weekly scan every Monday at 00:00 UTC
+    - cron: '0 0 * * 1'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  security-events: write
+  actions: read
+
+jobs:
+  # Config scan for IaC files (Kubernetes, Terraform, Docker, etc.)
+  config-scan:
+    name: Config Scan (IaC)
+    uses: ./.github/workflows/infra/trivy-scan.yml
+    with:
+      scan-type: 'config'
+      upload-sarif: true
+      ignore-unfixed: true
+    secrets:
+      github-token: ${{ secrets.GITHUB_TOKEN }}
+
+  # Full filesystem vulnerability scan
+  fs-scan:
+    name: Filesystem Scan
+    uses: ./.github/workflows/infra/trivy-scan.yml
+    with:
+      scan-type: 'fs'
+      upload-sarif: true
+      ignore-unfixed: true
+    secrets:
+      github-token: ${{ secrets.GITHUB_TOKEN }}
+
+  # Summary report
+  security-summary:
+    name: Security Summary
+    runs-on: ubuntu-latest
+    needs: [config-scan, fs-scan]
+    if: always()
+
+    steps:
+      - name: Check scan results
+        run: |
+          echo "## Security Scan Summary" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Scan Type | Status |" >> "$GITHUB_STEP_SUMMARY"
+          echo "|-----------|--------|" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Config (IaC) | ${{ needs.config-scan.result }} |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Filesystem | ${{ needs.fs-scan.result }} |" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "View detailed results in the [Security tab](https://github.com/${{ github.repository }}/security/code-scanning)" >> "$GITHUB_STEP_SUMMARY"

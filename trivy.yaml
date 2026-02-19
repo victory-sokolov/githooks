@@ -1,0 +1,37 @@
+# Trivy Configuration
+# Shared settings for security scanning across repositories
+# Copy this file to your repository root for consistent scanning
+
+# Global options
+quiet: true
+cache-dir: /tmp/trivy-cache
+
+# Severity levels to detect
+severity:
+  - CRITICAL
+  - HIGH
+
+# Skip directories
+skip-dirs:
+  - .git
+  - node_modules
+  - .terraform
+  - vendor
+  - dist
+  - build
+
+# Skip files
+skip-files:
+  - package-lock.json
+  - yarn.lock
+  - pnpm-lock.yaml
+  - bun.lockb
+
+# Vulnerability scanning settings
+vulnerability:
+  type: os,library
+  ignore-unfixed: true
+
+# Misconfiguration scanning settings
+misconfiguration:
+  include-non-failures: false

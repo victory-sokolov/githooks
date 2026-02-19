@@ -8,7 +8,7 @@ on:
       - '**/*.tf'
       - '**/*.tfvars'
       - '.terraform.lock.hcl'
-  workflow_call: # This makes it callable from other workflows
+  workflow_call:
     inputs:
       terraform_version:
         description: 'Terraform version to use'
@@ -20,14 +20,19 @@ on:
         required: false
         type: string
         default: '.'
+      skip_trivy:
+        description: 'Skip Trivy security scan'
+        required: false
+        type: boolean
+        default: false
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
 
 jobs:
-  tfsec:
-    name: terraform-code-quality
+  terraform-quality:
+    name: Terraform Quality
     runs-on: ubuntu-latest
     env:
       TF_PLUGIN_CACHE_DIR: ~/.terraform.d/plugin-cache
@@ -44,7 +49,7 @@ jobs:
       - name: Create Terraform plugin cache directory
         run: mkdir -p "$TF_PLUGIN_CACHE_DIR"
       - name: Cache Terraform plugins
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: ~/.terraform.d/plugin-cache
           key: ${{ runner.os }}-terraform-${{ hashFiles('**/.terraform.lock.hcl') }}
@@ -62,3 +67,14 @@ jobs:
         uses: dflook/terraform-plan@v2
         with:
           path: ${{ inputs.working_directory }}
+
+  trivy-scan:
+    name: Trivy Security Scan
+    needs: terraform-quality
+    if: ${{ !inputs.skip_trivy }}
+    uses: ./.github/workflows/infra/trivy-scan.yml
+    with:
+      scan-type: 'config'
+      upload-sarif: true
+    secrets:
+      github-token: ${{ secrets.github-token || github.token }}

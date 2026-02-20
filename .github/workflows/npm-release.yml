@@ -1,12 +1,40 @@
-name: Release
+name: Reusable NPM Release
 
 on:
-  workflow_run:
-    workflows: ['CI']
-    types:
-      - completed
-    branches:
-      - main
+  workflow_call:
+    inputs:
+      package-manager:
+        description: 'Package manager (bun, npm, pnpm)'
+        required: false
+        default: 'npm'
+        type: string
+      registry:
+        description: 'Registry type (npm for public, github for GitHub Packages)'
+        required: false
+        default: 'npm'
+        type: string
+      scope:
+        description: 'Scope for GitHub Packages (e.g., @victory-sokolov)'
+        required: false
+        default: ''
+        type: string
+      node-version:
+        description: 'Node.js version'
+        required: false
+        default: '24'
+        type: string
+      skip-version-check:
+        description: 'Skip version check before publishing'
+        required: false
+        default: false
+        type: boolean
+    secrets:
+      npm-token:
+        description: 'NPM token for public registry'
+        required: false
+      github-token:
+        description: 'GitHub token (provided automatically)'
+        required: false
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
@@ -14,36 +42,105 @@ concurrency:
 
 jobs:
   release:
-    strategy:
-      matrix:
-        node-version: [24.x]
-
-    name: Create a new release
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      issues: write
+      pull-requests: write
+      packages: write
 
     steps:
-      - uses: actions/checkout@v6
+      - name: Checkout code
+        uses: actions/checkout@v6
         with:
           fetch-depth: 0
-      - name: Read .nvmrc if exists
-        id: nvm
-        run: |
-          if [ -f .nvmrc ]; then
-            echo "NODE_VERSION=$(cat .nvmrc)" >> "$GITHUB_OUTPUT"
-          else
-            echo "NODE_VERSION=24" >> "$GITHUB_OUTPUT"
-          fi
 
-      - name: 📦 Setup dependencies with cache
-        uses: victory-sokolov/githooks/.github/actions/node-deps-cache@main
+      - name: Setup Bun
+        if: inputs.package-manager == 'bun'
+        uses: oven-sh/setup-bun@v2
+
+      - name: Setup pnpm
+        if: inputs.package-manager == 'pnpm'
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node.js (GitHub Packages)
+        if: inputs.registry == 'github'
+        uses: actions/setup-node@v6
         with:
-          package-manager: "npm"
-          node-version: "${{ steps.nvm.outputs.NODE_VERSION }}"
-        env:
-          HUSKY: 0
+          node-version: ${{ inputs.node-version }}
+          registry-url: 'https://npm.pkg.github.com'
+          scope: ${{ inputs.scope }}
+
+      - name: Setup Node.js (public npm)
+        if: inputs.registry == 'npm'
+        uses: actions/setup-node@v6
+        with:
+          node-version: ${{ inputs.node-version }}
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Install dependencies (bun)
+        if: inputs.package-manager == 'bun'
+        run: bun install
+
+      - name: Install dependencies (npm)
+        if: inputs.package-manager == 'npm'
+        run: npm ci
+
+      - name: Install dependencies (pnpm)
+        if: inputs.package-manager == 'pnpm'
+        run: pnpm install --frozen-lockfile
+
+      - name: Build (bun)
+        if: inputs.package-manager == 'bun'
+        run: bun run build
+
+      - name: Build (npm)
+        if: inputs.package-manager == 'npm'
+        run: npm run build
+
+      - name: Build (pnpm)
+        if: inputs.package-manager == 'pnpm'
+        run: pnpm build
 
       - name: Release
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: npx semantic-release
+        env:
+          GITHUB_TOKEN: ${{ secrets.github-token || github.token }}
+          NPM_TOKEN: ${{ inputs.registry == 'npm' && secrets.npm-token || '' }}
+
+      - name: Get package info
+        id: package-info
+        run: |
+          PKG_NAME=$(node -p "require('./package.json').name")
+          PKG_VERSION=$(node -p "require('./package.json').version")
+          echo "name=$PKG_NAME" >> $GITHUB_OUTPUT
+          echo "version=$PKG_VERSION" >> $GITHUB_OUTPUT
+
+      - name: Check if version already published
+        id: version-check
+        if: inputs.skip-version-check != true
+        run: |
+          if [ "${{ inputs.registry }}" = "github" ]; then
+            PUBLISHED=$(npm view ${{ steps.package-info.outputs.name }} version 2>/dev/null || echo "none")
+          else
+            PUBLISHED=$(npm view ${{ steps.package-info.outputs.name }} version --registry https://registry.npmjs.org 2>/dev/null || echo "none")
+          fi
+          echo "published=$PUBLISHED" >> $GITHUB_OUTPUT
+          if [ "${{ steps.package-info.outputs.version }}" = "$PUBLISHED" ]; then
+            echo "skip_publish=true" >> $GITHUB_OUTPUT
+            echo "Version ${{ steps.package-info.outputs.version }} already published, skipping"
+          else
+            echo "skip_publish=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Publish to GitHub Packages
+        if: inputs.registry == 'github' && (inputs.skip-version-check == true || steps.version-check.outputs.skip_publish != 'true')
+        run: npm publish
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.github-token || github.token }}
+
+      - name: Publish to npm
+        if: inputs.registry == 'npm' && (inputs.skip-version-check == true || steps.version-check.outputs.skip_publish != 'true')
+        run: npm publish
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.npm-token }}

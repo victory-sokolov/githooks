@@ -1,0 +1,15 @@
+# Reusable lefthook configuration for Node.js/Bun projects
+# Reference this from your project's lefthook.yml:
+# remote:
+#   git: https://github.com/YOUR_ORG/githooks
+#   config: hooks/lefthook/lefthook.yml
+
+pre-commit:
+  parallel: true
+  commands:
+    format-check:
+      run: bun run format:check
+    lint:
+      run: bun run lint
+    typecheck:
+      run: bun run typecheck

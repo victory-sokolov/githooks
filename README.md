@@ -39,6 +39,12 @@ This repository contains various Git hooks that can be used to enforce developme
   - Automatically runs `npm install` in affected directories
 - **Usage**: Used with Husky for Git hooks management
 
+### Lefthook Hooks
+
+#### `lefthook/lefthook.yml`
+- **Purpose**: Reusable lefthook configuration for Node.js/Bun projects
+- **Usage**: See [hooks/lefthook/README.md](hooks/lefthook/README.md)
+
 ## GitHub Actions Workflows
 
 This repository provides reusable GitHub Actions workflows for common CI/CD tasks.

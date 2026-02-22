@@ -25,6 +25,9 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: 🔤 Spell Check with Typos
+        uses: crate-ci/typos@v1.43.5
+
       - name: 📄 Read .python-version if exists
         id: python-version
         run: |

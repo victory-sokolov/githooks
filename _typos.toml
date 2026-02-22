@@ -1,0 +1,36 @@
+[default]
+extend-ignore-re = ["#\\s*spellchecker:disable-line"]
+
+[default.extend-identifiers]
+# JavaScript/TypeScript ecosystem
+NodeJS = "NodeJS"
+TypeScript = "TypeScript"
+Javascript = "Javascript"
+npm = "npm"
+pnpm = "pnpm"
+bun = "bun"
+
+# Python ecosystem
+PyPI = "PyPI"
+pytest = "pytest"
+
+# Common tech terms
+GraphQL = "GraphQL"
+WebSocket = "WebSocket"
+eslint = "eslint"
+prettier = "prettier"
+codecov = "codecov"
+dependabot = "dependabot"
+
+[files]
+extend-exclude = [
+  "*.lock",
+  "*.lockb",
+  "package-lock.json",
+  "pnpm-lock.yaml",
+  "bun.lockb",
+  "*.min.js",
+  "*.min.css",
+  "dist/",
+  "node_modules/"
+]

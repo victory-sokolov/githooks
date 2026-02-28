@@ -130,7 +130,7 @@ jobs:
           cd BuildOutput && zip -r FileTransfer-v${VERSION}.ipa Payload/ && cd ..
 
       - name: Upload Build Artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: FileTransfer-iOS
           path: BuildOutput/*.ipa

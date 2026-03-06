@@ -29,6 +29,9 @@
     "jsPlugins": [
         "eslint-plugin-sonarjs"
     ],
+    "options": {
+        "typeAware": true
+    },
     "env": {
         "browser": true,
         "es2021": true,

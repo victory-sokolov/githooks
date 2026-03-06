@@ -26,6 +26,9 @@
         "import/exports-last": "off"
     },
     "plugins": ["jest", "import", "typescript", "react", "oxc", "unicorn", "node"],
+    "jsPlugins": [
+        "eslint-plugin-sonarjs"
+    ],
     "env": {
         "browser": true,
         "es2021": true,

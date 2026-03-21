@@ -113,24 +113,24 @@ jobs:
         run: |
           PKG_NAME=$(node -p "require('./package.json').name")
           PKG_VERSION=$(node -p "require('./package.json').version")
-          echo "name=$PKG_NAME" >> $GITHUB_OUTPUT
-          echo "version=$PKG_VERSION" >> $GITHUB_OUTPUT
+          echo "name=$PKG_NAME" >> "$GITHUB_OUTPUT"
+          echo "version=$PKG_VERSION" >> "$GITHUB_OUTPUT"
 
       - name: Check if version already published
         id: version-check
         if: inputs.skip-version-check != true
         run: |
           if [ "${{ inputs.registry }}" = "github" ]; then
-            PUBLISHED=$(npm view ${{ steps.package-info.outputs.name }} version 2>/dev/null || echo "none")
+            PUBLISHED=$(npm view "${{ steps.package-info.outputs.name }}" version 2>/dev/null || echo "none")
           else
-            PUBLISHED=$(npm view ${{ steps.package-info.outputs.name }} version --registry https://registry.npmjs.org 2>/dev/null || echo "none")
+            PUBLISHED=$(npm view "${{ steps.package-info.outputs.name }}" version --registry https://registry.npmjs.org 2>/dev/null || echo "none")
           fi
-          echo "published=$PUBLISHED" >> $GITHUB_OUTPUT
+          echo "published=$PUBLISHED" >> "$GITHUB_OUTPUT"
           if [ "${{ steps.package-info.outputs.version }}" = "$PUBLISHED" ]; then
-            echo "skip_publish=true" >> $GITHUB_OUTPUT
+            echo "skip_publish=true" >> "$GITHUB_OUTPUT"
             echo "Version ${{ steps.package-info.outputs.version }} already published, skipping"
           else
-            echo "skip_publish=false" >> $GITHUB_OUTPUT
+            echo "skip_publish=false" >> "$GITHUB_OUTPUT"
           fi
 
       - name: Publish to GitHub Packages

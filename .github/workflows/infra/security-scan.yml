@@ -65,11 +65,13 @@ jobs:
     steps:
       - name: Check scan results
         run: |
-          echo "## Security Scan Summary" >> "$GITHUB_STEP_SUMMARY"
-          echo "" >> "$GITHUB_STEP_SUMMARY"
-          echo "| Scan Type | Status |" >> "$GITHUB_STEP_SUMMARY"
-          echo "|-----------|--------|" >> "$GITHUB_STEP_SUMMARY"
-          echo "| Config (IaC) | ${{ needs.config-scan.result }} |" >> "$GITHUB_STEP_SUMMARY"
-          echo "| Filesystem | ${{ needs.fs-scan.result }} |" >> "$GITHUB_STEP_SUMMARY"
-          echo "" >> "$GITHUB_STEP_SUMMARY"
-          echo "View detailed results in the [Security tab](https://github.com/${{ github.repository }}/security/code-scanning)" >> "$GITHUB_STEP_SUMMARY"
+          {
+            echo "## Security Scan Summary"
+            echo ""
+            echo "| Scan Type | Status |"
+            echo "|-----------|--------|"
+            echo "| Config (IaC) | ${{ needs.config-scan.result }} |"
+            echo "| Filesystem | ${{ needs.fs-scan.result }} |"
+            echo ""
+            echo "View detailed results in the [Security tab](https://github.com/${{ github.repository }}/security/code-scanning)"
+          } >> "$GITHUB_STEP_SUMMARY"

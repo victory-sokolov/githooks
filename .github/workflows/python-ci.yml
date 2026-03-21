@@ -43,7 +43,7 @@ jobs:
           python-version: ${{ steps.python-version.outputs.PYTHON }}
 
       - name: 🚀 Install uv
-        uses: astral-sh/setup-uv@v7.5
+        uses: astral-sh/setup-uv@v7.6
         with:
           version: ${{ inputs.uv-version }}
 

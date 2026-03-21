@@ -121,7 +121,7 @@ jobs:
 
       - name: 📊 Upload coverage reports
         if: inputs.upload-coverage && (success() || failure())
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: coverage-report-${{ inputs.package-manager }}
           path: |

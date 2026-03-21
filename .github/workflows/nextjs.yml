@@ -34,7 +34,7 @@ jobs:
         uses: actions/checkout@v6
 
       - name: 🔤 Spell Check with Typos
-        uses: crate-ci/typos@v1.43.5
+        uses: crate-ci/typos@v1.44.0
 
       - name: Read .nvmrc if exists
         id: nvm

@@ -9,7 +9,15 @@ pre-commit:
   commands:
     format-check:
       run: bun run format:check
+      stage_fixed: true
     lint:
       run: bun run lint
     typecheck:
       run: bun run typecheck
+    # ──────────────────────────────────────────────────────
+    # auto-update lockfile when package.json is staged
+    deps-sync:
+      glob: 'package.json'
+      run: |
+        bun install --lockfile-only
+        git add bun.lock*

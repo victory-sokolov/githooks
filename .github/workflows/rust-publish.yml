@@ -1,0 +1,157 @@
+name: Rust Publish
+
+on:
+  workflow_call:
+    inputs:
+      binary_name:
+        description: 'Name of the binary to package'
+        required: true
+        type: string
+      rust_toolchain:
+        description: 'Rust toolchain (stable, beta, nightly)'
+        required: false
+        default: 'stable'
+        type: string
+      macos_targets:
+        description: 'macOS build targets (JSON array)'
+        required: false
+        default: '["aarch64-apple-darwin", "x86_64-apple-darwin"]'
+        type: string
+      linux_targets:
+        description: 'Linux build targets (JSON array)'
+        required: false
+        default: '["x86_64-unknown-linux-gnu"]'
+        type: string
+      build_macos:
+        description: 'Build for macOS'
+        required: false
+        default: true
+        type: boolean
+      build_linux:
+        description: 'Build for Linux'
+        required: false
+        default: true
+        type: boolean
+      publish_crates:
+        description: 'Publish to crates.io'
+        required: false
+        default: true
+        type: boolean
+      create_release:
+        description: 'Create GitHub release'
+        required: false
+        default: true
+        type: boolean
+    secrets:
+      CARGO_REGISTRY_TOKEN:
+        description: 'Token for crates.io authentication'
+        required: false
+
+permissions:
+  contents: write
+
+env:
+  CARGO_TERM_COLOR: always
+  RUSTFLAGS: '-Dwarnings'
+
+jobs:
+  build-macos:
+    if: ${{ inputs.build_macos != false }}
+    runs-on: macos-latest
+    strategy:
+      matrix:
+        target: ${{ fromJson(inputs.macos_targets) }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: ${{ inputs.rust_toolchain || 'stable' }}
+          targets: ${{ matrix.target }}
+
+      - name: Build
+        run: cargo build --release --target ${{ matrix.target }}
+
+      - name: Package binary
+        run: |
+          cd target/${{ matrix.target }}/release
+          tar -czvf ${{ inputs.binary_name }}-${{ matrix.target }}.tar.gz ${{ inputs.binary_name }}
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ inputs.binary_name }}-${{ matrix.target }}
+          path: target/${{ matrix.target }}/release/${{ inputs.binary_name }}-${{ matrix.target }}.tar.gz
+
+  build-linux:
+    if: ${{ inputs.build_linux != false }}
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        target: ${{ fromJson(inputs.linux_targets) }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: ${{ inputs.rust_toolchain || 'stable' }}
+          targets: ${{ matrix.target }}
+
+      - name: Build
+        run: cargo build --release --target ${{ matrix.target }}
+
+      - name: Package binary
+        run: |
+          cd target/${{ matrix.target }}/release
+          tar -czvf ${{ inputs.binary_name }}-${{ matrix.target }}.tar.gz ${{ inputs.binary_name }}
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ inputs.binary_name }}-${{ matrix.target }}
+          path: target/${{ matrix.target }}/release/${{ inputs.binary_name }}-${{ matrix.target }}.tar.gz
+
+  publish-crate:
+    runs-on: ubuntu-latest
+    needs: [build-macos, build-linux]
+    if: always() && !failure() && inputs.publish_crates != false && startsWith(github.ref, 'refs/tags/')
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: ${{ inputs.rust_toolchain || 'stable' }}
+
+      - name: Publish to crates.io
+        run: cargo publish
+        env:
+          CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
+
+  github-release:
+    runs-on: ubuntu-latest
+    needs: [build-macos, build-linux]
+    if: always() && !failure() && inputs.create_release != false && startsWith(github.ref, 'refs/tags/')
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: artifacts/**/${{ inputs.binary_name }}-*.tar.gz
+          generate_release_notes: true

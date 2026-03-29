@@ -50,26 +50,16 @@ jobs:
           package-manager: ${{ inputs.package-manager }}
           node-version: ${{ steps.nvm.outputs.NODE_VERSION }}
 
+      - name: 📋 Display tool versions
+        run: |
+          curl -sfL "https://raw.githubusercontent.com/victory-sokolov/githooks/main/.github/scripts/display-tool-versions.ts" -o /tmp/display-tool-versions.ts
+          node --experimental-strip-types /tmp/display-tool-versions.ts "${{ inputs.package-manager }}" "v1.44.0"
+
       - name: Check available scripts
         id: scripts
         run: |
-          node -e "
-          const fs = require('fs');
-          try {
-            const pkg = JSON.parse(fs.readFileSync('package.json', 'utf8'));
-            const scripts = pkg.scripts || {};
-            ['lint', 'format:check', 'typecheck', 'test', 'build', 'jscpd', 'knip', 'audit'].forEach(s => {
-              const outputName = s.replace(/:/g, '_');
-              console.log(outputName + '=' + (scripts[s] ? 'true' : 'false'));
-            });
-          } catch (e) {
-            ['lint', 'format:check', 'typecheck', 'test', 'build', 'jscpd', 'knip', 'audit'].forEach(s => {
-              const outputName = s.replace(/:/g, '_');
-              console.log(outputName + '=false');
-            });
-          }
-          " >> "$GITHUB_OUTPUT"
-          echo "has_src_lib=$([ -d src ] || [ -d lib ] && echo 'true' || echo 'false')" >> "$GITHUB_OUTPUT"
+          curl -sfL "https://raw.githubusercontent.com/victory-sokolov/githooks/main/.github/scripts/check-available-scripts.ts" -o /tmp/check-available-scripts.ts
+          node --experimental-strip-types /tmp/check-available-scripts.ts
 
       - name: 🔍 Run lint
         if: steps.scripts.outputs.lint == 'true'

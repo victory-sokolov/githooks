@@ -9,7 +9,7 @@ inputs:
   node-version:
     description: 'Node.js version to use'
     required: false
-    default: '22'
+    default: '24'
   bun-version:
     description: 'Bun version to use'
     required: false

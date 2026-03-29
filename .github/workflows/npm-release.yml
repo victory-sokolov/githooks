@@ -80,7 +80,7 @@ jobs:
 
       - name: Install dependencies (bun)
         if: inputs.package-manager == 'bun'
-        run: bun install
+        run: bun install --frozen-lockfile
 
       - name: Install dependencies (npm)
         if: inputs.package-manager == 'npm'

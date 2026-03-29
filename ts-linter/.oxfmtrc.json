@@ -1,9 +1,16 @@
 {
     "$schema": "./node_modules/oxfmt/configuration_schema.json",
     "singleQuote": true,
+    "printWidth": 100,
     "tabWidth": 4,
     "bracketSpacing": true,
     "trailingComma": "all",
     "arrowParens": "avoid",
     "ignorePatterns": ["docs/", "plop-templates/", "dist/", ".stryker-tmp/", "reports/"]
 }
+
+
+
+
+
+

@@ -1,0 +1,214 @@
+excluded:
+  - build
+  - Pods
+  - .build
+
+# MARK: - Line Length Configuration
+line_length:
+  warning: 200
+  error: 400
+  ignores_urls: true
+  ignores_comments: true
+  ignores_interpolated_strings: true
+
+# MARK: - Code Safety & Bugs
+force_cast: warning # Avoid crashes
+force_try: warning # Avoid runtime crashes
+implicitly_unwrapped_optional: warning
+fatal_error_message: warning # Enforce meaningful messages
+
+# MARK: - Optional Handling
+empty_count: warning # Prefer `isEmpty` over `count == 0`
+optional_enum_case_matching: warning
+implicit_optional_initialization: warning
+
+# MARK: - Memory Management
+weak_delegate: warning # Prevent retain cycles
+strong_iboutlet: warning # IBOutlets should usually be weak
+
+# MARK: - Swift Best Practices
+array_init: warning # Prefer shorthand array initialization
+contains_over_filter_count: warning
+first_where: warning
+last_where: warning
+reduce_into: warning
+toggle_bool: warning
+sorted_first_last: warning
+
+# MARK: - Performance
+unused_closure_parameter: warning
+unused_optional_binding: warning
+unused_import: warning
+
+# MARK: - Code Clarity
+explicit_init: warning
+redundant_type_annotation: warning
+redundant_void_return: warning
+shorthand_operator: warning
+vertical_whitespace: warning
+
+# MARK: - Style (Readable, Not Pedantic)
+trailing_whitespace:
+  ignores_empty_lines: true
+  ignores_comments: true
+
+trailing_comma:
+  mandatory_comma: true
+
+multiline_arguments:
+  first_argument_location: next_line
+  only_enforce_after_first_closure_on_first_line: true
+
+# MARK: - Auto-fixable Style Rules
+colon:
+  flexible_right_spacing: false
+comma: warning
+opening_brace: warning
+closing_brace: warning
+return_arrow_whitespace: warning
+statement_position: warning
+
+# MARK: - Naming
+identifier_name:
+  min_length:
+    warning: 2
+  max_length:
+    warning: 60
+  excluded:
+    - id
+    - x
+    - y
+    - z
+
+type_name:
+  min_length: 3
+  max_length:
+    warning: 50
+
+# MARK: - Control Flow
+empty_enum_arguments: warning
+fallthrough: warning
+for_where: warning
+switch_case_alignment: warning
+
+# NOTE: Swift 6 Concurrency Checking
+# Concurrency safety is enforced via compiler flags, not SwiftLint:
+# - Build Settings: SWIFT_STRICT_CONCURRENCY = complete
+# - Compiler Flags: -Xfrontend -strict-concurrency=complete
+# - See CI.yml and build settings for configuration
+# Custom rules below catch common anti-patterns
+
+# MARK: - Collection Rules
+collection_alignment: warning
+syntactic_sugar: warning
+
+# MARK: - Function Rules
+function_body_length:
+  warning: 50
+  error: 100
+function_parameter_count:
+  warning: 5
+  error: 8
+
+# MARK: - Opt-in Rules (required for the rules above to take effect)
+opt_in_rules:
+  # Code Safety
+  - array_init
+  - contains_over_filter_count
+  - contains_over_filter_is_empty
+  - empty_count
+  - implicit_optional_initialization
+  - implicitly_unwrapped_optional
+  - fatal_error_message
+
+  # Performance
+  - first_where
+  - last_where
+  - reduce_into
+  - sorted_first_last
+  - toggle_bool
+  - contains_over_first_not_nil
+  - redundant_nil_coalescing
+
+  # Memory Management
+  - weak_delegate
+  - strong_iboutlet
+
+  # Clarity
+  - explicit_init
+  - redundant_type_annotation
+  - redundant_void_return
+  - shorthand_operator
+  - vertical_whitespace
+  - redundant_objc_attribute
+  - redundant_string_enum_value
+
+  # Style & Formatting
+  - fallthrough
+  - empty_enum_arguments
+  - for_where
+  - switch_case_alignment
+  - collection_alignment
+  - syntactic_sugar
+  - control_statement
+  - leading_whitespace
+  - unused_closure_parameter
+  - unused_optional_binding
+  - multiline_arguments
+  - multiline_parameters
+  - multiline_literal_brackets
+  - multiline_function_chains
+  - opening_brace
+  - closing_brace
+  - comma
+  - colon
+  - trailing_newline
+  - trailing_semicolon
+  - return_arrow_whitespace
+  - statement_position
+
+  # Advanced
+  - optional_enum_case_matching
+  - pattern_matching_keywords
+  - prefer_self_type_over_type_of_self
+  - unused_enumerated
+  - valid_ibinspectable
+
+analyzer_rules:
+  - unused_import
+  - unused_declaration
+
+unused_declaration:
+  - severity: error
+
+# MARK: - Custom Concurrency Rules
+# These catch common anti-patterns. Note: warnings are informational
+# and acceptable if properly mitigated (e.g., NSMutableData wrapped in Sendable class)
+custom_rules:
+  # Detect NSMutableData usage in concurrent code
+  avoid_nsmutabledata:
+    name: 'Avoid NSMutableData in Concurrent Code'
+    regex: "NSMutableData\\(\\)"
+    message: 'NSMutableData is not Sendable. Use Data or wrap in a thread-safe Sendable class with proper locking'
+    severity: warning
+
+  # Detect old-style GCD instead of modern concurrency
+  avoid_dispatch_queue:
+    name: 'Use Modern Swift Concurrency'
+    regex: "DispatchQueue\\.(main|global)\\.(async|sync)"
+    message: 'Use async/await, Task, or actors instead of DispatchQueue for Swift 6 compatibility'
+    severity: warning
+
+  # Detect NSHomeDirectory (deprecated in favor of URL.homeDirectory)
+  avoid_nshome_directory:
+    name: 'Use Modern URL API'
+    regex: "NSHomeDirectory\\(\\)"
+    message: 'Use URL.homeDirectory instead of NSHomeDirectory()'
+    severity: warning
+
+  # Flag nonisolated(unsafe) for manual review
+  review_nonisolated_unsafe:
+    name: 'Review nonisolated(unsafe) Usage'
+    regex: "nonisolated\\(unsafe\\)"
+    message: 'Verify nonisolated(unsafe) is necessary. Remove for Sendable constants (String, Int, etc.) or struct properties. Required for mutable state protected by locks or for accessing from nonisolated contexts.'
+    severity: warning

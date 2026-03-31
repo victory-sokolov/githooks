@@ -12,9 +12,10 @@ line_length:
   ignores_interpolated_strings: true
 
 # MARK: - Code Safety & Bugs
-force_cast: warning # Avoid crashes
+force_cast: warning # Avoid crashes``
 force_try: warning # Avoid runtime crashes
 implicitly_unwrapped_optional: warning
+force_unwrapping: error # Prevent EXC_BAD_INSTRUCTION crashes
 fatal_error_message: warning # Enforce meaningful messages
 
 # MARK: - Optional Handling

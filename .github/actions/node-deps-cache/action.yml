@@ -103,7 +103,7 @@ runs:
             sfw pnpm install --frozen-lockfile --ignore-scripts
             ;;
           yarn)
-            sfw yarn install --frozen-lockfile --ignore-scripts
+            sfw yarn install --immutable --immutable-cache --ignore-scripts
             ;;
           npm)
             sfw npm ci --ignore-scripts

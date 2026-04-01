@@ -80,15 +80,15 @@ jobs:
 
       - name: Install dependencies (bun)
         if: inputs.package-manager == 'bun'
-        run: bun install --frozen-lockfile
+        run: bun install --frozen-lockfile --ignore-scripts
 
       - name: Install dependencies (npm)
         if: inputs.package-manager == 'npm'
-        run: npm ci
+        run: npm ci --ignore-scripts
 
       - name: Install dependencies (pnpm)
         if: inputs.package-manager == 'pnpm'
-        run: pnpm install --frozen-lockfile
+        run: pnpm install --frozen-lockfile --ignore-scripts
 
       - name: Build (bun)
         if: inputs.package-manager == 'bun'

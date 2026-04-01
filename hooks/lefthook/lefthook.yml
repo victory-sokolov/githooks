@@ -19,5 +19,5 @@ pre-commit:
     deps-sync:
       glob: 'package.json'
       run: |
-        bun install --lockfile-only
+        bun install --frozen-lockfile --ignore-scripts
         git add bun.lock*

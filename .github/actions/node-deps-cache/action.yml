@@ -97,15 +97,15 @@ runs:
 
         case "$PM" in
           bun)
-            bun install --frozen-lockfile
+            bun install --frozen-lockfile --ignore-scripts
             ;;
           pnpm)
-            pnpm install --frozen-lockfile
+            pnpm install --frozen-lockfile --ignore-scripts
             ;;
           yarn)
-            yarn install --frozen-lockfile
+            yarn install --frozen-lockfile --ignore-scripts
             ;;
           npm)
-            npm ci
+            npm ci --ignore-scripts
             ;;
         esac

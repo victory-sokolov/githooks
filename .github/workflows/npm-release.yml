@@ -140,12 +140,12 @@ jobs:
 
       - name: Publish to GitHub Packages
         if: inputs.registry == 'github' && (inputs.skip-version-check == true || steps.version-check.outputs.skip_publish != 'true')
-        run: npm publish
+        run: npm publish --provenance
         env:
           NODE_AUTH_TOKEN: ${{ secrets.github-token || github.token }}
 
       - name: Publish to npm
         if: inputs.registry == 'npm' && (inputs.skip-version-check == true || steps.version-check.outputs.skip_publish != 'true')
-        run: npm publish
+        run: npm publish --provenance
         env:
           NODE_AUTH_TOKEN: ${{ secrets.npm-token }}

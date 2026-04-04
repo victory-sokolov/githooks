@@ -28,6 +28,8 @@ extend-exclude = [
   "*.lockb",
   "package-lock.json",
   "pnpm-lock.yaml",
+  ".oxlintrc.json",
+  ".oxfmtrc.json",
   "bun.lockb",
   "*.min.js",
   "*.min.css",

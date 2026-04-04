@@ -111,7 +111,7 @@ jobs:
           if [ "${{ inputs.package-manager }}" == "pnpm" ]; then
             pnpm test --coverage
           else
-            bun test --coverage
+            bun run test:coverage
           fi
 
       - name: 📊 Upload coverage reports
@@ -132,7 +132,7 @@ jobs:
           if [ "${{ inputs.package-manager }}" == "pnpm" ]; then
             pnpm jscpd
           else
-            bun jscpd
+            bun run jscpd
           fi
 
       - name: ✅ Run Knip

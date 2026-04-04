@@ -8,9 +8,3 @@
     "arrowParens": "avoid",
     "ignorePatterns": ["docs/", "plop-templates/", "dist/", ".stryker-tmp/", "reports/"]
 }
-
-
-
-
-
-

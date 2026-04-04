@@ -1,8 +1,9 @@
 # Reusable lefthook configuration for Node.js/Bun projects
 # Reference this from your project's lefthook.yml:
-# remote:
-#   git: https://github.com/YOUR_ORG/githooks
-#   config: hooks/lefthook/lefthook.yml
+# remotes:
+#   - git_url: https://github.com/victory-sokolov/githooks
+#     configs:
+#       - hooks/lefthook/lefthook.yml
 
 pre-commit:
   parallel: true

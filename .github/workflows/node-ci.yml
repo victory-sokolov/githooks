@@ -141,7 +141,7 @@ jobs:
           if [ "${{ inputs.package-manager }}" == "pnpm" ]; then
             pnpm knip --cache
           else
-            bun knip --cache
+            bun run knip --cache
           fi
 
       - name: 🔒 Run security audit

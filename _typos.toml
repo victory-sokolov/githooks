@@ -35,5 +35,5 @@ extend-exclude = [
   "*.min.css",
   "dist/",
   "node_modules/",
-  "questions/**.ndjson",
+  "**/questions/**.ndjson",
 ]

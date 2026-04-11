@@ -4,11 +4,18 @@ updates:
     directory: '/'
     schedule:
       interval: 'weekly'
+    cooldown: &cooldown
+      default-days: 7
+      semver-major-days: 14
+      semver-minor-days: 7
+      semver-patch-days: 3
   - package-ecosystem: 'bun'
     directory: '/'
     schedule:
       interval: 'weekly'
+    cooldown: *cooldown
   - package-ecosystem: 'uv'
     directory: '/'
     schedule:
       interval: 'weekly'
+    cooldown: *cooldown

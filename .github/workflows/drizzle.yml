@@ -1,0 +1,85 @@
+name: Reusable Drizzle ORM CI
+
+on:
+  workflow_call:
+    inputs:
+      database-url:
+        description: 'PostgreSQL database URL (required if not using postgres-service)'
+        type: string
+        default: ''
+      migration-table-name:
+        description: 'Custom migration table name'
+        default: '__drizzle_migrations'
+        type: string
+      working-directory:
+        description: 'Working directory for the workflow'
+        default: '.'
+        type: string
+
+env:
+  PGPORT: 5431
+  POSTGRES_DB: blog
+  POSTGRES_PASSWORD: securepassword
+  POSTGRES_USER: user
+  PGHOST: localhost
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  drizzle:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16.4
+        env:
+          POSTGRES_USER: ${{ env.POSTGRES_USER }}
+          POSTGRES_PASSWORD: ${{ env.POSTGRES_PASSWORD }}
+          POSTGRES_DB: ${{ env.POSTGRES_DB }}
+          PGPORT: ${{ env.PGPORT }}
+        ports:
+          - 5431:5431
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - name: 📥 Checkout commit
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: 📦 Setup Bun
+        uses: oven-sh/setup-bun@v2
+
+      - name: 📥 Install dependencies
+        working-directory: ${{ inputs.working-directory }}
+        run: bun install
+
+      - name: 🔍 Run Drizzle Kit Check
+        working-directory: ${{ inputs.working-directory }}
+        env:
+          DATABASE_URL: ${{ inputs.database-url }}
+        run: bun x drizzle-kit check
+
+      - name: 🔄 Run Drizzle Kit Push
+        working-directory: ${{ inputs.working-directory }}
+        env:
+          DATABASE_URL: ${{ inputs.database-url }}
+        run: bun x drizzle-kit push
+
+      - name: 🚀 Run Drizzle Migration
+        working-directory: ${{ inputs.working-directory }}
+        env:
+          DATABASE_URL: ${{ inputs.database-url }}
+        run: bun x drizzle-kit migrate
+
+      - name: ✅ Verify (dry-run generate)
+        working-directory: ${{ inputs.working-directory }}
+        env:
+          DATABASE_URL: ${{ inputs.database-url }}
+        run: bun x drizzle-kit generate --dry-run

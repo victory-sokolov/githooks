@@ -9,6 +9,7 @@ This repository contains reusable GitHub Actions workflows for various automatio
 2. **Swift CI Workflow** - For Swift projects with linting, building, and testing
 3. **NPM Release Workflow** - For releasing packages to npm or GitHub Packages
 4. **Dead Links Workflow** - For checking dead URLs and image links
+5. **Drizzle ORM Workflow** - For database migrations and schema checks
 
 ### Security Workflows
 5. **Trivy Security Scan** - Reusable workflow for vulnerability, secret, and misconfiguration scanning
@@ -281,6 +282,89 @@ permissions:
 - For npm: `NPM_TOKEN` secret must be set
 - For GitHub Packages: `package-scope` and `package-name` must be provided
 - Your `package.json` must have the correct scope for GitHub Packages
+
+## 📋 Drizzle ORM Workflow Details
+
+The Drizzle ORM workflow runs database migrations, schema checks, and verification using drizzle-kit with a built-in PostgreSQL service.
+
+### 🔧 Configuration Options
+
+| Input | Description | Default | Required |
+|-------|-------------|---------|----------|
+| `database-url` | External PostgreSQL connection URL | - | No |
+| `skip-check` | Skip `drizzle-kit check` step | `false` | No |
+| `skip-push` | Skip `drizzle-kit push` step | `false` | No |
+| `skip-migration` | Skip `drizzle-kit migrate` step | `false` | No |
+| `skip-generate` | Skip `drizzle-kit generate --dry-run` step | `false` | No |
+| `migration-table-name` | Custom migration table name | `__drizzle_migrations` | No |
+| `working-directory` | Directory to run commands in | `.` | No |
+| `bun-version` | Bun version to use | `1` | No |
+
+### 📋 Usage Example
+
+```yaml
+name: Drizzle CI
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+
+jobs:
+  drizzle:
+    uses: victory-sokolov/githooks/.github/workflows/drizzle.yml@main
+    with:
+      working-directory: ./db
+```
+
+### 🎯 What It Does
+
+1. **PostgreSQL Service**: Starts a PostgreSQL 16.4 container on port 5431
+2. **Drizzle Kit Check**: Validates schema matches the database
+3. **Drizzle Kit Push**: Syncs schema changes to the database
+4. **Drizzle Kit Migrate**: Runs pending migrations
+5. **Verify (dry-run)**: Runs `drizzle-kit generate --dry-run` to verify schema
+
+### 🔒 Default Environment Variables
+
+The workflow uses these default values (matching the postgres-service workflow):
+
+- `PGHOST`: `localhost`
+- `PGPORT`: `5431`
+- `POSTGRES_DB`: `blog`
+- `POSTGRES_USER`: `user`
+- `POSTGRES_PASSWORD`: `securepassword`
+
+### ⚠️ Requirements
+
+- Drizzle Kit must be installed in your project (`drizzle-kit` as dependency or devDependency)
+- Your `drizzle.config.ts` should be configured to read from `DATABASE_URL` environment variable
+
+### Using External Database
+
+To use an external PostgreSQL database instead of the built-in service:
+
+```yaml
+jobs:
+  drizzle:
+    uses: victory-sokolov/githooks/.github/workflows/drizzle.yml@main
+    with:
+      database-url: ${{ secrets.DATABASE_URL }}
+      working-directory: ./db
+```
+
+### Skipping Specific Steps
+
+```yaml
+jobs:
+  drizzle:
+    uses: victory-sokolov/githooks/.github/workflows/drizzle.yml@main
+    with:
+      skip-check: true
+      skip-push: true
+      working-directory: ./db
+```
 
 ## 📦 Package Manager Examples
 

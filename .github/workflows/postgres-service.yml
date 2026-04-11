@@ -2,11 +2,8 @@ name: ci
 
 on:
   workflow_dispatch:
-  # push:
-  #   branches: [main, master]
-
-  # pull_request:
-  #   types: [opened, reopened, synchronize]
+  pull_request:
+    types: [opened, reopened, synchronize]
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
@@ -46,9 +43,6 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v6
 
-      # Add your other steps here, such as tests or migrations
-
-      # Step to retrieve PostgreSQL logs
       - name: Retrieve PostgreSQL logs
         if: always() # ensures this runs even if the job fails
         run: docker logs "${{ job.services.postgres.id }}"

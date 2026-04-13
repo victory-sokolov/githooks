@@ -1,52 +1,55 @@
-{
-    "$schema": "./node_modules/oxlint/configuration_schema.json",
-    "rules": {
-        "typescript": "error",
-        "import": "warn",
-        "react": "warn",
-        "eslint": "warn",
-        "unicorn": "warn",
-        "jsdoc": "warn",
-        "node": "warn",
-        "perf": "warn",
-        "vitest/expect-expect": "error",
-        "complexity": "error",
-        "import/no-cycle": ["error", { "maxDepth": 3 }],
-        "typescript/no-floating-promises": "error",
-        "typescript/no-unsafe-assignment": "warn",
-        "@typescript-eslint/no-deprecated": "warn",
-        "typescript/no-explicit-any": "error",
-        "typescript/consistent-type-definitions": ["warn", "type"],
-        "id-length": ["warn", { "exceptions": ["T", "K", "j"] }],
-        "max-lines-per-function": ["error", { "skipBlankLines": true, "skipComments": true }],
-        "max-lines": ["error", { "max": 400, "skipBlankLines": true, "skipComments": true }],
-        "import/prefer-default-export": "off",
-        "import/no-named-export": "off",
-        "import/group-exports": "off",
-        "import/exports-last": "off"
-    },
-    "plugins": ["jest", "import", "typescript", "react", "oxc", "unicorn", "node"],
-    "jsPlugins": [
-        "eslint-plugin-sonarjs"
-    ],
-    "options": {
-        "typeAware": true
-    },
-    "env": {
-        "browser": true,
-        "es2021": true,
-        "node": true
-    },
-    "globals": {},
-    "categories": {
-        "correctness": "error",
-        "suspicious": "warn",
-        "pedantic": "warn",
-        "perf": "warn",
-        "restriction": "warn",
-        "style": "warn",
-        "nursery": "warn"
-    },
-    "ignorePatterns": ["docs/**", "bin/**", "tests/**", "**/*.cjs"],
-    "settings": {}
-}
+    {
+        "$schema": "./node_modules/oxlint/configuration_schema.json",
+        "rules": {
+            "typescript": "error",
+            "import": "warn",
+            "react": "warn",
+            "eslint": "warn",
+            "unicorn": "warn",
+            "jsdoc": "warn",
+            "node": "warn",
+            "perf": "warn",
+            "vitest/expect-expect": "error",
+            "complexity": "error",
+            "import/no-cycle": [ "error", { "maxDepth": 3 } ],
+            "typescript/no-floating-promises": "error",
+            "typescript/no-unsafe-assignment": "warn",
+            "@typescript-eslint/no-deprecated": "warn",
+            "typescript/no-explicit-any": "error",
+            "typescript/consistent-type-definitions": [ "warn", "type" ],
+            "id-length": [ "warn", { "exceptions": [ "T", "K", "j" ] } ],
+            "max-lines-per-function": [ "error", { "skipBlankLines": true, "skipComments": true } ],
+            "max-lines": [ "error", { "max": 400, "skipBlankLines": true, "skipComments": true } ],
+            "import/prefer-default-export": "off",
+            "import/no-named-export": "off",
+            "import/group-exports": "off",
+            "import/exports-last": "off"
+        },
+        "plugins": [ "jest", "import", "typescript", "react", "oxc", "unicorn", "node" ],
+        "jsPlugins": [
+            "eslint-plugin-sonarjs"
+        ],
+        "options": {
+            "typeAware": true,
+            "typeCheck": true
+        },
+        "env": {
+            "browser": true,
+            "es2021": true,
+            "node": true,
+            "builtin": true
+        },
+        "globals": { },
+        "categories": {
+            "correctness": "error",
+            "suspicious": "warn",
+            "pedantic": "warn",
+            "perf": "warn",
+            "restriction": "warn",
+            "style": "warn",
+            "nursery": "warn"
+        },
+        "ignorePatterns": [ "docs/**", "bin/**", "tests/**", "**/*.cjs" ],
+        "settings": { }
+    }
+    

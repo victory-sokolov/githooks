@@ -32,7 +32,7 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Socket firewall
+      - name: 🛡️ Socket firewall
         uses: socketdev/action@v1.3.2
         with:
           mode: firewall-free
@@ -60,7 +60,7 @@ jobs:
           package-manager: ${{ inputs.package-manager }}
           node-version: ${{ steps.nvm.outputs.NODE_VERSION }}
 
-      - name: Check available scripts
+      - name: 🔍 Check available scripts
         id: scripts
         run: |
           curl -sfL "https://raw.githubusercontent.com/victory-sokolov/githooks/main/.github/scripts/check-available-scripts.ts" -o /tmp/check-available-scripts.ts

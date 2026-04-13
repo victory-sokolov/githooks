@@ -185,6 +185,29 @@ jobs:
       skip_trivy: true
 ```
 
+
+## Docker build on GHCR
+
+```yml
+name: Deploy App
+
+on:
+  push:
+    branches: [ "main" ]
+
+jobs:
+  call-docker-build:
+    # Syntax: OWNER/REPO/.github/workflows/FILENAME@VERSION
+    uses: your-org/central-workflows/.github/workflows/build-push-reusable.yml@main
+    with:
+      image_name: "my-awesome-api"
+      dockerfile_path: "./docker/prod.Dockerfile"
+      build_args: |
+        NODE_ENV=production
+        API_VERSION=v1
+    secrets: inherit
+```
+
 ### What It Does
 
 1. **terraform fmt**: Checks code formatting

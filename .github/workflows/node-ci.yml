@@ -48,17 +48,17 @@ jobs:
           else
             echo "NODE_VERSION=${{ inputs.node-version }}" >> "$GITHUB_OUTPUT"
           fi
+        
+      - name: 📋 Display tool versions
+        run: |
+          curl -sfL "https://raw.githubusercontent.com/victory-sokolov/githooks/main/.github/scripts/display-tool-versions.ts" -o /tmp/display-tool-versions.ts
+          node --experimental-strip-types /tmp/display-tool-versions.ts "${{ inputs.package-manager }}" "v1.44.0"
 
       - name: 📦 Setup dependencies with cache
         uses: victory-sokolov/githooks/.github/actions/node-deps-cache@main
         with:
           package-manager: ${{ inputs.package-manager }}
           node-version: ${{ steps.nvm.outputs.NODE_VERSION }}
-
-      - name: 📋 Display tool versions
-        run: |
-          curl -sfL "https://raw.githubusercontent.com/victory-sokolov/githooks/main/.github/scripts/display-tool-versions.ts" -o /tmp/display-tool-versions.ts
-          node --experimental-strip-types /tmp/display-tool-versions.ts "${{ inputs.package-manager }}" "v1.44.0"
 
       - name: Check available scripts
         id: scripts

@@ -52,7 +52,7 @@ jobs:
       - name: 📋 Display tool versions
         run: |
           curl -sfL "https://raw.githubusercontent.com/victory-sokolov/githooks/main/.github/scripts/display-tool-versions.ts" -o /tmp/display-tool-versions.ts
-          node --experimental-strip-types /tmp/display-tool-versions.ts "${{ inputs.package-manager }}" "v1.44.0"
+          node /tmp/display-tool-versions.ts "${{ inputs.package-manager }}" "v1.44.0"
 
       - name: 📦 Setup dependencies with cache
         uses: victory-sokolov/githooks/.github/actions/node-deps-cache@main
@@ -64,7 +64,7 @@ jobs:
         id: scripts
         run: |
           curl -sfL "https://raw.githubusercontent.com/victory-sokolov/githooks/main/.github/scripts/check-available-scripts.ts" -o /tmp/check-available-scripts.ts
-          node --experimental-strip-types /tmp/check-available-scripts.ts
+          node /tmp/check-available-scripts.ts
 
       - name: 🔍 Run lint
         if: steps.scripts.outputs.lint == 'true'

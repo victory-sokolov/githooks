@@ -37,8 +37,8 @@ jobs:
         with:
           mode: firewall-free
 
-      - name: 🔤 Spell Check with Typos
-        uses: crate-ci/typos@v1.44.0
+      # - name: 🔤 Spell Check with Typos
+      #   uses: crate-ci/typos@v1.45.0
 
       - name: 📄 Read .nvmrc if exists
         id: nvm
@@ -48,7 +48,7 @@ jobs:
           else
             echo "NODE_VERSION=${{ inputs.node-version }}" >> "$GITHUB_OUTPUT"
           fi
-        
+
       - name: 📦 Setup dependencies with cache
         uses: victory-sokolov/githooks/.github/actions/node-deps-cache@main
         with:

@@ -95,7 +95,7 @@ runs:
 
     - name: 📤 Publish to GitHub Packages
       if: inputs.registry == 'github' && (inputs.skip-version-check != 'true' && steps.version-check.outputs.skip_publish != 'true')
-      run: npm publish --provenance
+      run: npm publish
       shell: bash
       env:
         NODE_AUTH_TOKEN: ${{ github.token }}

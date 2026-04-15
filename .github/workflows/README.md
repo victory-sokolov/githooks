@@ -200,9 +200,9 @@ jobs:
 - Your repository must contain Swift code (Package.swift or .swift files)
 - macOS runners are used for compatibility with Swift tools
 
-## 🚀 NPM Release Workflow
+## 🚀 NPM Release Action
 
-The NPM Release workflow handles semantic versioning and publishing packages to npm or GitHub Packages.
+The NPM Release action handles semantic versioning and publishing private packages to npm or GitHub Packages.
 
 ### 🔧 Configuration Options
 
@@ -210,7 +210,7 @@ The NPM Release workflow handles semantic versioning and publishing packages to 
 |-------|-------------|---------|----------|
 | `package-manager` | Package manager: `bun`, `pnpm`, `npm`, or `yarn` | `bun` | No |
 | `node-version` | Node.js version to use | `24` | No |
-| `registry` | Registry to publish to: `npm` or `github` | `github` | No |
+| `registry` | Registry: `npm` or `github` | `github` | No |
 | `package-scope` | Package scope for GitHub registry (e.g., `@victory-sokolov`) | - | For GitHub |
 | `skip-version-check` | Skip version check before publishing | `false` | No |
 
@@ -269,6 +269,8 @@ jobs:
           node-version: '24'
           registry: github
           package-scope: '@victory-sokolov'
+        env:
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
 ```
 
 ### 🎯 How It Works
@@ -276,7 +278,7 @@ jobs:
 1. **Setup**: Installs dependencies using the `node-deps-cache` action
 2. **Build**: Runs build step
 3. **Semantic Release**: Creates release with semantic-release
-4. **Publish**: Publishes to npm or GitHub Packages (skips if version already exists)
+4. **Publish**: Publishes private packages to npm or GitHub Packages (skips if version already exists)
 
 ### 🔒 Required Permissions
 

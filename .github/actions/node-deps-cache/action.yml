@@ -36,6 +36,7 @@ runs:
       shell: bash
       working-directory: ${{ inputs.working-directory }}
       run: |
+        echo "🔍 Detecting package manager..."
         if [ "${{ inputs.package-manager }}" != "auto" ]; then
           echo "package-manager=${{ inputs.package-manager }}" >> $GITHUB_OUTPUT
           exit 0
@@ -64,11 +65,12 @@ runs:
 
     - name: Node.js version
       shell: bash
-      run: 'echo "Using Node.js version: $(node --version)"'
+      run: |
+        echo "Using Node.js version: $(node --version)"
 
     - name: Setup pnpm
       if: steps.detect.outputs.package-manager == 'pnpm'
-      uses: pnpm/action-setup@v4
+      uses: pnpm/action-setup@v5
       with:
         version: ${{ inputs.pnpm-version }}
 
@@ -97,6 +99,7 @@ runs:
       working-directory: ${{ inputs.working-directory }}
       run: |
         PM="${{ steps.detect.outputs.package-manager }}"
+        echo "📦 Installing dependencies using $PM..."
 
         echo "Node.js version: $(node --version 2>/dev/null || echo 'Not available')"
 

@@ -50,25 +50,25 @@ jobs:
       packages: write
 
     steps:
-      - name: Checkout code
+      - name: 🔄 Checkout code
         uses: actions/checkout@v6
         with:
           fetch-depth: 0
 
-      - name: Socket firewall
+      - name: 🛡️ Socket firewall
         uses: socketdev/action@v1.3.2
         with:
           mode: firewall-free
 
-      - name: Setup Bun
+      - name: 🥟 Setup Bun
         if: inputs.package-manager == 'bun'
         uses: oven-sh/setup-bun@v2
 
-      - name: Setup pnpm
+      - name: 📦 Setup pnpm
         if: inputs.package-manager == 'pnpm'
         uses: pnpm/action-setup@v5
 
-      - name: Setup Node.js (GitHub Packages)
+      - name: 🟢 Setup Node.js (GitHub Packages)
         if: inputs.registry == 'github'
         uses: actions/setup-node@v6
         with:
@@ -76,44 +76,44 @@ jobs:
           registry-url: 'https://npm.pkg.github.com'
           scope: ${{ inputs.scope }}
 
-      - name: Setup Node.js (public npm)
+      - name: 🟢 Setup Node.js (public npm)
         if: inputs.registry == 'npm'
         uses: actions/setup-node@v6
         with:
           node-version: ${{ inputs.node-version }}
           registry-url: 'https://registry.npmjs.org'
 
-      - name: Install dependencies (bun)
+      - name: 📥 Install dependencies (bun)
         if: inputs.package-manager == 'bun'
         run: sfw bun install --frozen-lockfile --ignore-scripts
 
-      - name: Install dependencies (npm)
+      - name: 📥 Install dependencies (npm)
         if: inputs.package-manager == 'npm'
         run: sfw npm ci --ignore-scripts
 
-      - name: Install dependencies (pnpm)
+      - name: 📥 Install dependencies (pnpm)
         if: inputs.package-manager == 'pnpm'
         run: sfw pnpm install --frozen-lockfile --ignore-scripts
 
-      - name: Build (bun)
+      - name: 🏗️ Build (bun)
         if: inputs.package-manager == 'bun'
         run: bun run build
 
-      - name: Build (npm)
+      - name: 🏗️ Build (npm)
         if: inputs.package-manager == 'npm'
         run: npm run build
 
-      - name: Build (pnpm)
+      - name: 🏗️ Build (pnpm)
         if: inputs.package-manager == 'pnpm'
         run: pnpm build
 
-      - name: Release
+      - name: 🚀 Release
         run: npx semantic-release
         env:
           GITHUB_TOKEN: ${{ secrets.github-token || github.token }}
           NPM_TOKEN: ${{ inputs.registry == 'npm' && secrets.npm-token || '' }}
 
-      - name: Get package info
+      - name: 📋 Get package info
         id: package-info
         run: |
           PKG_NAME=$(node -p "require('./package.json').name")
@@ -121,7 +121,7 @@ jobs:
           echo "name=$PKG_NAME" >> "$GITHUB_OUTPUT"
           echo "version=$PKG_VERSION" >> "$GITHUB_OUTPUT"
 
-      - name: Check if version already published
+      - name: 🔍 Check if version already published
         id: version-check
         if: inputs.skip-version-check != true
         run: |
@@ -138,13 +138,13 @@ jobs:
             echo "skip_publish=false" >> "$GITHUB_OUTPUT"
           fi
 
-      - name: Publish to GitHub Packages
+      - name: 📤 Publish to GitHub Packages
         if: inputs.registry == 'github' && (inputs.skip-version-check == true || steps.version-check.outputs.skip_publish != 'true')
         run: npm publish --provenance
         env:
           NODE_AUTH_TOKEN: ${{ secrets.github-token || github.token }}
 
-      - name: Publish to npm
+      - name: 📤 Publish to npm
         if: inputs.registry == 'npm' && (inputs.skip-version-check == true || steps.version-check.outputs.skip_publish != 'true')
         run: npm publish --provenance
         env:

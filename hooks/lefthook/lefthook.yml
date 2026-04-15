@@ -8,7 +8,7 @@
 pre-commit:
   parallel: true
   commands:
-    format-check:
+    format:
       run: bun run format
       stage_fixed: true
     lint:

@@ -18,6 +18,14 @@ inputs:
     description: 'pnpm version to use'
     required: false
     default: 'latest'
+  registry:
+    description: 'Registry type (npm for public, github for GitHub Packages)'
+    required: false
+    default: 'npm'
+  scope:
+    description: 'Scope for GitHub Packages (e.g., @victory-sokolov)'
+    required: false
+    default: ''
   working-directory:
     description: 'Working directory'
     required: false
@@ -62,6 +70,8 @@ runs:
         node-version: ${{ inputs.node-version }}
         cache: ${{ steps.detect.outputs.package-manager != 'bun' && steps.detect.outputs.package-manager || '' }}
         cache-dependency-path: ${{ inputs.working-directory }}/${{ steps.detect.outputs.package-manager == 'pnpm' && 'pnpm-lock.yaml' || steps.detect.outputs.package-manager == 'yarn' && 'yarn.lock' || 'package-lock.json' }}
+        registry-url: ${{ inputs.registry == 'github' && 'https://npm.pkg.github.com' || '' }}
+        scope: ${{ inputs.registry == 'github' && inputs.scope || '' }}
 
     - name: Node.js version
       shell: bash

@@ -1,0 +1,108 @@
+name: 'NPM Release'
+description: 'Reusable action for NPM package release with semantic versioning'
+inputs:
+  package-manager:
+    description: 'Package manager (bun, npm, pnpm, yarn)'
+    required: false
+    default: 'bun'
+  registry:
+    description: 'Registry type (npm for public, github for GitHub Packages)'
+    required: false
+    default: 'github'
+  package-scope:
+    description: 'Scope for GitHub Packages (e.g., @victory-sokolov)'
+    required: false
+    default: ''
+  node-version:
+    description: 'Node.js version'
+    required: false
+    default: '24'
+  skip-version-check:
+    description: 'Skip version check before publishing'
+    required: false
+    default: 'false'
+runs:
+  using: 'composite'
+  steps:
+    - name: 🔄 Checkout code
+      uses: actions/checkout@v6
+      with:
+        fetch-depth: 0
+
+    - name: 📦 Setup dependencies and cache
+      id: node-deps-cache
+      uses: victory-sokolov/githooks/.github/actions/node-deps-cache@main
+      with:
+        package-manager: ${{ inputs.package-manager }}
+        node-version: ${{ inputs.node-version }}
+        registry: ${{ inputs.registry }}
+        scope: ${{ inputs.package-scope }}
+
+    - name: 🏗️ Build
+      run: |
+        PM="${{ steps.node-deps-cache.outputs.package-manager }}"
+        echo "🏗️ Building with $PM..."
+        
+        case "$PM" in
+          bun)
+            bun run build
+            ;;
+          pnpm)
+            pnpm build
+            ;;
+          yarn)
+            yarn build
+            ;;
+          npm)
+            npm run build
+            ;;
+        esac
+      shell: bash
+
+    - name: 🚀 Release
+      run: npx semantic-release
+      shell: bash
+      env:
+        GITHUB_TOKEN: ${{ github.token }}
+        NPM_TOKEN: ${{ inputs.registry == 'npm' && env.NPM_TOKEN || '' }}
+
+    - name: 📋 Get package info
+      id: package-info
+      run: |
+        PKG_NAME=$(node -p "require('./package.json').name")
+        PKG_VERSION=$(node -p "require('./package.json').version")
+        echo "name=$PKG_NAME" >> "$GITHUB_OUTPUT"
+        echo "version=$PKG_VERSION" >> "$GITHUB_OUTPUT"
+      shell: bash
+
+    - name: 🔍 Check if version already published
+      id: version-check
+      if: inputs.skip-version-check != 'true'
+      run: |
+        if [ "${{ inputs.registry }}" = "github" ]; then
+          PUBLISHED=$(npm view "${{ steps.package-info.outputs.name }}" version 2>/dev/null || echo "none")
+        else
+          PUBLISHED=$(npm view "${{ steps.package-info.outputs.name }}" version --registry https://registry.npmjs.org 2>/dev/null || echo "none")
+        fi
+        echo "published=$PUBLISHED" >> "$GITHUB_OUTPUT"
+        if [ "${{ steps.package-info.outputs.version }}" = "$PUBLISHED" ]; then
+          echo "skip_publish=true" >> "$GITHUB_OUTPUT"
+          echo "Version ${{ steps.package-info.outputs.version }} already published, skipping"
+        else
+          echo "skip_publish=false" >> "$GITHUB_OUTPUT"
+        fi
+      shell: bash
+
+    - name: 📤 Publish to GitHub Packages
+      if: inputs.registry == 'github' && (inputs.skip-version-check != 'true' && steps.version-check.outputs.skip_publish != 'true')
+      run: npm publish --provenance
+      shell: bash
+      env:
+        NODE_AUTH_TOKEN: ${{ github.token }}
+
+    - name: 📤 Publish to npm
+      if: inputs.registry == 'npm' && (inputs.skip-version-check != 'true' && steps.version-check.outputs.skip_publish != 'true')
+      run: npm publish --provenance
+      shell: bash
+      env:
+        NODE_AUTH_TOKEN: ${{ env.NPM_TOKEN }}

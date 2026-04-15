@@ -212,7 +212,7 @@ The NPM Release workflow handles semantic versioning and publishing packages to 
 | `node-version` | Node.js version to use | `24` | No |
 | `registry` | Registry to publish to: `npm` or `github` | `github` | No |
 | `package-scope` | Package scope for GitHub registry (e.g., `@victory-sokolov`) | - | For GitHub |
-| `package-name` | Package name without scope (for publish check) | - | For GitHub |
+| `skip-version-check` | Skip version check before publishing | `false` | No |
 
 ### 📋 Usage Examples
 
@@ -231,12 +231,19 @@ on:
 
 jobs:
   release:
-    uses: victory-sokolov/githooks/.github/workflows/npm-release-reusable.yml@main
-    with:
-      package-manager: npm
-      registry: npm
-    secrets:
-      NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      issues: write
+      pull-requests: write
+      packages: write
+    steps:
+      - uses: victory-sokolov/githooks/.github/actions/npm-release@main
+        with:
+          package-manager: npm
+          registry: npm
+        env:
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
 ```
 
 #### Release to GitHub Packages
@@ -249,13 +256,19 @@ on:
 
 jobs:
   release:
-    uses: victory-sokolov/githooks/.github/workflows/npm-release-reusable.yml@main
-    with:
-      package-manager: bun
-      node-version: '24'
-      registry: github
-      package-scope: '@victory-sokolov'
-      package-name: 'my-package'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      issues: write
+      pull-requests: write
+      packages: write
+    steps:
+      - uses: victory-sokolov/githooks/.github/actions/npm-release@main
+        with:
+          package-manager: bun
+          node-version: '24'
+          registry: github
+          package-scope: '@victory-sokolov'
 ```
 
 ### 🎯 How It Works

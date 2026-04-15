@@ -163,7 +163,7 @@ This repository provides reusable GitHub Actions workflows for common CI/CD task
 - **Purpose**: Scheduled merging of pull requests
 - **Trigger**: PR events (with optional cron schedule)
 
-#### `npm-release.yml`
+#### `npm-release` (Action)
 - **Purpose**: Automated NPM package releases
 - **Trigger**: After successful CI workflow
 

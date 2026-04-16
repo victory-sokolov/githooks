@@ -59,6 +59,12 @@ jobs:
           key: ${{ runner.os }}-nextjs-${{ hashFiles(format('{0}/package-lock.json', inputs.working-directory), format('{0}/pnpm-lock.yaml', inputs.working-directory), format('{0}/bun.lockb', inputs.working-directory)) }}
           restore-keys: |
             ${{ runner.os }}-nextjs-
+    
+      - name: 🩺 React Doctor
+        uses: millionco/react-doctor@main
+        with:
+          diff: main
+          github-token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: 🏗️ Run build
         run: |
@@ -70,7 +76,7 @@ jobs:
             npm run build
           fi
 
-      - name: Run tests
+      - name: 🧪 Run tests
         run: |
           if [ "${{ inputs.package-manager }}" == "pnpm" ]; then
             pnpm test

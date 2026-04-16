@@ -3,74 +3,74 @@ name: Playwright E2E Tests
 # Installs dependencies, sets up Playwright browsers, and runs tests
 
 on:
-  workflow_call:
-    inputs:
-      node-version:
-        description: 'Node.js version to use'
-        required: false
-        default: '24'
-        type: string
-      playwright-version:
-        description: 'Playwright version to install'
-        required: false
-        default: 'latest'
-        type: string
-      test-command:
-        description: 'Command to run Playwright tests'
-        required: false
-        default: 'npx playwright test'
-        type: string
-      working-directory:
-        description: 'Working directory for the tests'
-        required: false
-        default: '.'
-        type: string
-      package-manager:
-        description: 'Package manager to use (npm, pnpm, or bun)'
-        required: false
-        default: 'bun'
-        type: string
+    workflow_call:
+        inputs:
+            node-version:
+                description: 'Node.js version to use'
+                required: false
+                default: '24'
+                type: string
+            playwright-version:
+                description: 'Playwright version to install'
+                required: false
+                default: 'latest'
+                type: string
+            test-command:
+                description: 'Command to run Playwright tests'
+                required: false
+                default: 'npx playwright test'
+                type: string
+            working-directory:
+                description: 'Working directory for the tests'
+                required: false
+                default: '.'
+                type: string
+            package-manager:
+                description: 'Package manager to use (npm, pnpm, or bun)'
+                required: false
+                default: 'bun'
+                type: string
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
-  cancel-in-progress: true
+    group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+    cancel-in-progress: true
 
 jobs:
-  e2e:
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: ${{ inputs.working-directory }}
-    steps:
-      - name: 📥 Checkout code
-        uses: actions/checkout@v6
+    e2e:
+        runs-on: ubuntu-latest
+        defaults:
+            run:
+                working-directory: ${{ inputs.working-directory }}
+        steps:
+            - name: 📥 Checkout code
+              uses: actions/checkout@v6
 
-      - name: 📦 Setup dependencies with cache
-        uses: victory-sokolov/githooks/.github/actions/node-deps-cache@main
-        with:
-          package-manager: ${{ inputs.package-manager }}
-          node-version: ${{ inputs.node-version }}
-          working-directory: ${{ inputs.working-directory }}
+            - name: 📦 Setup dependencies with cache
+              uses: victory-sokolov/githooks/.github/actions/node-deps-cache@main
+              with:
+                  package-manager: ${{ inputs.package-manager }}
+                  node-version: ${{ inputs.node-version }}
+                  working-directory: ${{ inputs.working-directory }}
 
-      - name: Cache Playwright browsers
-        uses: actions/cache@v4
-        with:
-          path: ~/.cache/ms-playwright
-          key: ${{ runner.os }}-playwright-${{ inputs.playwright-version }}
-          restore-keys: |
-            ${{ runner.os }}-playwright-
+            - name: Cache Playwright browsers
+              uses: actions/cache@v5
+              with:
+                  path: ~/.cache/ms-playwright
+                  key: ${{ runner.os }}-playwright-${{ inputs.playwright-version }}
+                  restore-keys: |
+                      ${{ runner.os }}-playwright-
 
-      - name: 🎭 Install Playwright browsers
-        run: npx playwright@${{ inputs.playwright-version }} install --with-deps
+            - name: 🎭 Install Playwright browsers
+              run: npx playwright@${{ inputs.playwright-version }} install --with-deps
 
-      - name: 🧪 Run Playwright tests
-        run: ${{ inputs.test-command }}
+            - name: 🧪 Run Playwright tests
+              run: ${{ inputs.test-command }}
 
-      - name: 📊 Upload test results
-        uses: actions/upload-artifact@v7
-        if: always()
-        with:
-          name: playwright-report
-          path: ${{ inputs.working-directory }}/playwright-report/
-          retention-days: 7
-          compression-level: 6
+            - name: 📊 Upload test results
+              uses: actions/upload-artifact@v7
+              if: always()
+              with:
+                  name: playwright-report
+                  path: ${{ inputs.working-directory }}/playwright-report/
+                  retention-days: 7
+                  compression-level: 6

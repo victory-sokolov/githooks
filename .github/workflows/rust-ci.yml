@@ -1,111 +1,111 @@
 name: Rust CI
 
 on:
-  workflow_call:
-    inputs:
-      rust_toolchain:
-        description: 'Rust toolchain (stable, beta, nightly)'
-        required: false
-        default: 'stable'
-        type: string
-      runner:
-        description: 'Runner label (macos-latest, ubuntu-latest, etc.)'
-        required: false
-        default: 'macos-latest'
-        type: string
-      run_fmt:
-        description: 'Run cargo fmt check'
-        required: false
-        default: true
-        type: boolean
-      run_clippy:
-        description: 'Run cargo clippy'
-        required: false
-        default: true
-        type: boolean
-      run_tests:
-        description: 'Run cargo test'
-        required: false
-        default: true
-        type: boolean
-      run_check:
-        description: 'Run cargo check'
-        required: false
-        default: true
-        type: boolean
-      all_features:
-        description: 'Use --all-features flag'
-        required: false
-        default: true
-        type: boolean
-      extra_args:
-        description: 'Extra arguments for cargo commands'
-        required: false
-        default: ''
-        type: string
-  push:
-    paths:
-      - '**/*.rs'
-      - '**/Cargo.toml'
-      - '**/Cargo.lock'
-  pull_request:
-    paths:
-      - '**/*.rs'
-      - '**/Cargo.toml'
-      - '**/Cargo.lock'
+    workflow_call:
+        inputs:
+            rust_toolchain:
+                description: 'Rust toolchain (stable, beta, nightly)'
+                required: false
+                default: 'stable'
+                type: string
+            runner:
+                description: 'Runner label (macos-latest, ubuntu-latest, etc.)'
+                required: false
+                default: 'macos-latest'
+                type: string
+            run_fmt:
+                description: 'Run cargo fmt check'
+                required: false
+                default: true
+                type: boolean
+            run_clippy:
+                description: 'Run cargo clippy'
+                required: false
+                default: true
+                type: boolean
+            run_tests:
+                description: 'Run cargo test'
+                required: false
+                default: true
+                type: boolean
+            run_check:
+                description: 'Run cargo check'
+                required: false
+                default: true
+                type: boolean
+            all_features:
+                description: 'Use --all-features flag'
+                required: false
+                default: true
+                type: boolean
+            extra_args:
+                description: 'Extra arguments for cargo commands'
+                required: false
+                default: ''
+                type: string
+    push:
+        paths:
+            - '**/*.rs'
+            - '**/Cargo.toml'
+            - '**/Cargo.lock'
+    pull_request:
+        paths:
+            - '**/*.rs'
+            - '**/Cargo.toml'
+            - '**/Cargo.lock'
 
 env:
-  CARGO_TERM_COLOR: always
-  RUSTFLAGS: '-Dwarnings'
+    CARGO_TERM_COLOR: always
+    RUSTFLAGS: '-Dwarnings'
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
-  cancel-in-progress: true
+    group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+    cancel-in-progress: true
 
 jobs:
-  ci:
-    runs-on: ${{ inputs.runner || 'macos-latest' }}
+    ci:
+        runs-on: ${{ inputs.runner || 'macos-latest' }}
 
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v6
+        steps:
+            - name: Checkout code
+              uses: actions/checkout@v6
 
-      - name: Setup Rust
-        uses: dtolnay/rust-toolchain@master
-        with:
-          toolchain: ${{ inputs.rust_toolchain || 'stable' }}
-          components: rustfmt, clippy
+            - name: Setup Rust
+              uses: dtolnay/rust-toolchain@master
+              with:
+                  toolchain: ${{ inputs.rust_toolchain || 'stable' }}
+                  components: rustfmt, clippy
 
-      - name: Cache cargo registry
-        uses: actions/cache@v4
-        with:
-          path: ~/.cargo/registry
-          key: ${{ runner.os }}-cargo-registry-${{ hashFiles('**/Cargo.lock') }}
+            - name: Cache cargo registry
+              uses: actions/cache@v5
+              with:
+                  path: ~/.cargo/registry
+                  key: ${{ runner.os }}-cargo-registry-${{ hashFiles('**/Cargo.lock') }}
 
-      - name: Cache cargo index
-        uses: actions/cache@v4
-        with:
-          path: ~/.cargo/git
-          key: ${{ runner.os }}-cargo-git-${{ hashFiles('**/Cargo.lock') }}
+            - name: Cache cargo index
+              uses: actions/cache@v5
+              with:
+                  path: ~/.cargo/git
+                  key: ${{ runner.os }}-cargo-git-${{ hashFiles('**/Cargo.lock') }}
 
-      - name: Cache target
-        uses: actions/cache@v4
-        with:
-          path: target
-          key: ${{ runner.os }}-target-${{ hashFiles('**/Cargo.lock') }}
+            - name: Cache target
+              uses: actions/cache@v5
+              with:
+                  path: target
+                  key: ${{ runner.os }}-target-${{ hashFiles('**/Cargo.lock') }}
 
-      - name: Check formatting
-        if: ${{ inputs.run_fmt != false }}
-        run: cargo fmt -- --check
+            - name: Check formatting
+              if: ${{ inputs.run_fmt != false }}
+              run: cargo fmt -- --check
 
-      - name: Run clippy
-        if: ${{ inputs.run_clippy != false }}
-        run: cargo clippy --all-targets ${{ inputs.all_features != false && '--all-features' || '' }} ${{ inputs.extra_args }}
+            - name: Run clippy
+              if: ${{ inputs.run_clippy != false }}
+              run: cargo clippy --all-targets ${{ inputs.all_features != false && '--all-features' || '' }} ${{ inputs.extra_args }}
 
-      - name: Run tests
-        if: ${{ inputs.run_tests != false }}
-        run: cargo test ${{ inputs.all_features != false && '--all-features' || '' }} ${{ inputs.extra_args }}
+            - name: Run tests
+              if: ${{ inputs.run_tests != false }}
+              run: cargo test ${{ inputs.all_features != false && '--all-features' || '' }} ${{ inputs.extra_args }}
 
-      - name: Check build
-        if: ${{ inputs.run_check != false }}
-        run: cargo check --all-targets ${{ inputs.all_features != false && '--all-features' || '' }} ${{ inputs.extra_args }}
+            - name: Check build
+              if: ${{ inputs.run_check != false }}
+              run: cargo check --all-targets ${{ inputs.all_features != false && '--all-features' || '' }} ${{ inputs.extra_args }}

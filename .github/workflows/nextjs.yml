@@ -1,111 +1,113 @@
 name: nextjs
 
 on:
-  workflow_call:
-    inputs:
-      node-version:
-        description: 'Node.js version to use'
-        required: false
-        default: '24'
-        type: string
-      working-directory:
-        description: 'Working directory for the Next.js app'
-        required: false
-        default: '.'
-        type: string
-      package-manager:
-        description: 'Package manager to use (npm, pnpm, or bun)'
-        required: false
-        default: 'bun'
-        type: string
+    workflow_call:
+        inputs:
+            node-version:
+                description: 'Node.js version to use'
+                required: false
+                default: '24'
+                type: string
+            working-directory:
+                description: 'Working directory for the Next.js app'
+                required: false
+                default: '.'
+                type: string
+            package-manager:
+                description: 'Package manager to use (npm, pnpm, or bun)'
+                required: false
+                default: 'bun'
+                type: string
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
-  cancel-in-progress: true
+    group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+    cancel-in-progress: true
 
 jobs:
-  build-and-export:
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: ${{ inputs.working-directory }}
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v6
+    build-and-export:
+        runs-on: ubuntu-latest
+        defaults:
+            run:
+                working-directory: ${{ inputs.working-directory }}
+        steps:
+            - name: Checkout code
+              uses: actions/checkout@v6
 
-      - name: 🔤 Spell Check with Typos
-        uses: crate-ci/typos@v1.44.0
+            - name: 🔤 Spell Check with Typos
+              uses: crate-ci/typos@v1.44.0
 
-      - name: Read .nvmrc if exists
-        id: nvm
-        run: |
-          if [ -f .nvmrc ]; then
-            echo "NODE_VERSION=$(cat .nvmrc)" >> "$GITHUB_OUTPUT"
-          else
-            echo "NODE_VERSION=${{ inputs.node-version }}" >> "$GITHUB_OUTPUT"
-          fi
+            - name: Read .nvmrc if exists
+              id: nvm
+              run: |
+                  if [ -f .nvmrc ]; then
+                    echo "NODE_VERSION=$(cat .nvmrc)" >> "$GITHUB_OUTPUT"
+                  else
+                    echo "NODE_VERSION=${{ inputs.node-version }}" >> "$GITHUB_OUTPUT"
+                  fi
 
-      - name: 📦 Setup dependencies with cache
-        uses: victory-sokolov/githooks/.github/actions/node-deps-cache@main
-        with:
-          package-manager: '${{ inputs.package-manager }}'
-          node-version: '${{ steps.nvm.outputs.NODE_VERSION }}'
-          working-directory: '${{ inputs.working-directory }}'
+            - name: 📦 Setup dependencies with cache
+              uses: victory-sokolov/githooks/.github/actions/node-deps-cache@main
+              with:
+                  package-manager: '${{ inputs.package-manager }}'
+                  node-version: '${{ steps.nvm.outputs.NODE_VERSION }}'
+                  working-directory: '${{ inputs.working-directory }}'
 
-      - name: Cache Next.js build outputs
-        uses: actions/cache@v5
-        with:
-          path: ${{ inputs.working-directory }}/.next/cache
-          key: ${{ runner.os }}-nextjs-${{ hashFiles(format('{0}/package-lock.json', inputs.working-directory), format('{0}/pnpm-lock.yaml', inputs.working-directory), format('{0}/bun.lockb', inputs.working-directory)) }}
-          restore-keys: |
-            ${{ runner.os }}-nextjs-
-    
-      - name: 🩺 React Doctor
-        uses: millionco/react-doctor@main
-        with:
-          diff: main
-          github-token: ${{ secrets.GITHUB_TOKEN }}
+            - name: Cache Next.js build outputs
+              uses: actions/cache@v5
+              with:
+                  path: |
+                      ~/.npm
+                      ${{ github.workspace }}/.next/cache
+                  key: ${{ runner.os }}-nextjs-${{ hashFiles(format('{0}/package-lock.json', inputs.working-directory), format('{0}/pnpm-lock.yaml', inputs.working-directory), format('{0}/bun.lockb', inputs.working-directory)) }}
+                  restore-keys: |
+                      ${{ runner.os }}-nextjs-${{ hashFiles('**/bun-lock') }}
 
-      - name: 🏗️ Run build
-        run: |
-          if [ "${{ inputs.package-manager }}" == "pnpm" ]; then
-            pnpm run build
-          elif [ "${{ inputs.package-manager }}" == "bun" ]; then
-            bun run build
-          else
-            npm run build
-          fi
+            - name: 🩺 React Doctor
+              uses: millionco/react-doctor@main
+              with:
+                  diff: main
+                  github-token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: 🧪 Run tests
-        run: |
-          if [ "${{ inputs.package-manager }}" == "pnpm" ]; then
-            pnpm test
-          elif [ "${{ inputs.package-manager }}" == "bun" ]; then
-            bun test
-          else
-            npm test
-          fi
-        continue-on-error: true # Allow workflow to continue if tests fail
+            - name: 🏗️ Run build
+              run: |
+                  if [ "${{ inputs.package-manager }}" == "pnpm" ]; then
+                    pnpm run build
+                  elif [ "${{ inputs.package-manager }}" == "bun" ]; then
+                    bun run build
+                  else
+                    npm run build
+                  fi
 
-      - name: Export Next.js app
-        run: |
-          if [ "${{ inputs.package-manager }}" == "pnpm" ]; then
-            pnpm run export
-          elif [ "${{ inputs.package-manager }}" == "bun" ]; then
-            bun run export
-          else
-            npm run export
-          fi
+            - name: 🧪 Run tests
+              run: |
+                  if [ "${{ inputs.package-manager }}" == "pnpm" ]; then
+                    pnpm test
+                  elif [ "${{ inputs.package-manager }}" == "bun" ]; then
+                    bun test
+                  else
+                    npm test
+                  fi
+              continue-on-error: true # Allow workflow to continue if tests fail
 
-      - name: 📤 Upload build artifacts
-        if: success() || failure()
-        uses: actions/upload-artifact@v7
-        with:
-          name: build-artifacts-${{ inputs.package-manager }}
-          path: |
-            dist/
-            build/
-            .next/
-            out/
-          retention-days: 7
-          compression-level: 6
+            - name: Export Next.js app
+              run: |
+                  if [ "${{ inputs.package-manager }}" == "pnpm" ]; then
+                    pnpm run export
+                  elif [ "${{ inputs.package-manager }}" == "bun" ]; then
+                    bun run export
+                  else
+                    npm run export
+                  fi
+
+            - name: 📤 Upload build artifacts
+              if: success() || failure()
+              uses: actions/upload-artifact@v7
+              with:
+                  name: build-artifacts-${{ inputs.package-manager }}
+                  path: |
+                      dist/
+                      build/
+                      .next/
+                      out/
+                  retention-days: 7
+                  compression-level: 6

@@ -37,8 +37,10 @@ jobs:
         with:
           mode: firewall-free
 
-      # - name: 🔤 Spell Check with Typos
-      #   uses: crate-ci/typos@v1.45.0
+      - name: 🔤 Spell Check with Typos
+        uses: crate-ci/typos@v1.45.0
+        with:
+          files: docs/**/* **/*.md
 
       - name: 📄 Read .nvmrc if exists
         id: nvm

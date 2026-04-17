@@ -40,7 +40,7 @@ jobs:
       - name: 🔤 Spell Check with Typos
         uses: crate-ci/typos@v1.45.0
         with:
-          files: docs/**/* **/*.md
+          files: "**/*.md"
 
       - name: 📄 Read .nvmrc if exists
         id: nvm

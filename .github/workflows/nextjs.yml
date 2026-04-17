@@ -83,9 +83,20 @@ jobs:
                   else
                     npm test
                   fi
-              continue-on-error: true # Allow workflow to continue if tests fail
+              continue-on-error: true
 
-            - name: Export Next.js app
+            - name: 👁️ Run accessibility tests
+              continue-on-error: true
+              run: |
+                  if [ "${{ inputs.package-manager }}" == "pnpm" ]; then
+                    pnpm run test:a11y
+                  elif [ "${{ inputs.package-manager }}" == "bun" ]; then
+                    bun run test:a11y
+                  else
+                    npm run test:a11y
+                  fi
+
+            - name: 📦 Export Next.js app
               run: |
                   if [ "${{ inputs.package-manager }}" == "pnpm" ]; then
                     pnpm run export

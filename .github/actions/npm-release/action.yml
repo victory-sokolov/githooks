@@ -2,7 +2,7 @@ name: 'NPM Release'
 description: 'Reusable action for NPM package release with semantic versioning (private packages)'
 inputs:
   package-manager:
-    description: 'Package manager (bun, npm, pnpm, yarn)'
+    description: 'Package manager (bun, npm, pnpm)'
     required: false
     default: 'bun'
   registry:
@@ -52,9 +52,6 @@ runs:
             ;;
           pnpm)
             pnpm build
-            ;;
-          yarn)
-            yarn build
             ;;
           npm)
             npm run build

@@ -208,7 +208,7 @@ The NPM Release action handles semantic versioning and publishing private packag
 
 | Input | Description | Default | Required |
 |-------|-------------|---------|----------|
-| `package-manager` | Package manager: `bun`, `pnpm`, `npm`, or `yarn` | `bun` | No |
+| `package-manager` | Package manager: `bun`, `pnpm`, `npm`, | `bun` | No |
 | `node-version` | Node.js version to use | `24` | No |
 | `registry` | Registry: `npm` or `github` | `github` | No |
 | `package-scope` | Package scope for GitHub registry (e.g., `@victory-sokolov`) | - | For GitHub |

@@ -3,7 +3,7 @@ description: Detects package manager, sets it up with proper caching, and instal
 
 inputs:
   package-manager:
-    description: 'Package manager to use (auto, bun, pnpm, npm, yarn). Auto-detects if not specified.'
+    description: 'Package manager to use (auto, bun, pnpm, npm). Auto-detects if not specified.'
     required: false
     default: 'bun'
   node-version:
@@ -55,8 +55,6 @@ runs:
           echo "package-manager=bun" >> $GITHUB_OUTPUT
         elif [ -f "pnpm-lock.yaml" ]; then
           echo "package-manager=pnpm" >> $GITHUB_OUTPUT
-        elif [ -f "yarn.lock" ]; then
-          echo "package-manager=yarn" >> $GITHUB_OUTPUT
         elif [ -f "package-lock.json" ]; then
           echo "package-manager=npm" >> $GITHUB_OUTPUT
         else
@@ -69,7 +67,7 @@ runs:
       with:
         node-version: ${{ inputs.node-version }}
         cache: ${{ steps.detect.outputs.package-manager != 'bun' && steps.detect.outputs.package-manager || '' }}
-        cache-dependency-path: ${{ inputs.working-directory }}/${{ steps.detect.outputs.package-manager == 'pnpm' && 'pnpm-lock.yaml' || steps.detect.outputs.package-manager == 'yarn' && 'yarn.lock' || 'package-lock.json' }}
+        cache-dependency-path: ${{ inputs.working-directory }}/${{ steps.detect.outputs.package-manager == 'pnpm' && 'pnpm-lock.yaml' || 'package-lock.json' }}
         registry-url: ${{ inputs.registry == 'github' && 'https://npm.pkg.github.com' || '' }}
         scope: ${{ inputs.registry == 'github' && inputs.scope || '' }}
 
@@ -119,9 +117,6 @@ runs:
             ;;
           pnpm)
             sfw pnpm install --frozen-lockfile --ignore-scripts
-            ;;
-          yarn)
-            sfw yarn install --immutable --immutable-cache --ignore-scripts
             ;;
           npm)
             sfw npm ci --ignore-scripts

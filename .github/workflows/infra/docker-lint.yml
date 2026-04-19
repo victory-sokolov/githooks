@@ -5,19 +5,15 @@ on:
   push:
     branches: [main, master]
     paths:
-      - 'Dockerfile'
       - '**/Dockerfile*'
-      - '**/Dockerfile.*'
-      - 'docker-compose*.yml'
-      - 'compose.yml'
-      - '**/*.sh'
+      - '*compose.yml'
 
 jobs:
   docker:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
-        uses: actions/checkout@master
+        uses: actions/checkout@v6
 
       - name: Lint Dockerfile using Checkov
         id: checkov
@@ -35,7 +31,6 @@ jobs:
       - name: Run Trivy vulnerability scanner
         uses: aquasecurity/trivy-action@0.28.0
         with:
-          image-ref: 'docker.io/victorysokolov/django-blog:${{ github.sha }}'
           format: 'table'
           exit-code: '1'
           ignore-unfixed: true

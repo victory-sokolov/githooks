@@ -115,7 +115,7 @@ runs:
 
         case "$PM" in
           bun)
-            sfw bun install --frozen-lockfile --ignore-scripts
+            sfw bun ci --ignore-scripts
             ;;
           pnpm)
             sfw pnpm install --frozen-lockfile --ignore-scripts

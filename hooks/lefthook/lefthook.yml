@@ -16,6 +16,8 @@ pre-commit:
       stage_fixed: true
     typecheck:
       run: bun run typecheck
+    duplicate-code:
+      run: bun run jscpd
     # ──────────────────────────────────────────────────────
     # auto-update lockfile when package.json is staged
     deps-sync:

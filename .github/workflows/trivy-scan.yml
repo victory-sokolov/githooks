@@ -1,15 +1,3 @@
-# Reusable Trivy Security Scanning Workflow
-# Can be called from other repositories via workflow_call
-#
-# Usage:
-#   jobs:
-#     security:
-#       uses: victory-sokolov/githooks/.github/workflows/infra/trivy-scan.yml@main
-#       with:
-#         scan-type: 'config'
-#
-# Note: Uses trivy.yaml from githooks repo by default. Override by adding trivy.yaml to your repo.
-
 name: Trivy Security Scan
 
 on:
@@ -86,7 +74,7 @@ jobs:
           # Run appropriate scan type with defaults
           case "${{ inputs.scan-type }}" in
             config)
-              trivy --quiet --config trivy.yaml config \
+              trivy --quiet --config trivy.yaml --skip-dirs node_modules config \
                 --format ${{ inputs.format }} \
                 --output trivy-results.sarif \
                 --severity CRITICAL,HIGH \
@@ -96,7 +84,7 @@ jobs:
                 "."
               ;;
             fs)
-              trivy --quiet --config trivy.yaml fs \
+              trivy --quiet --config trivy.yaml --skip-dirs node_modules fs \
                 --format ${{ inputs.format }} \
                 --output trivy-results.sarif \
                 --severity CRITICAL,HIGH \

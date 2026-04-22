@@ -1,0 +1,95 @@
+name: Docker Lint
+
+on:
+  workflow_call:
+    inputs:
+      directory:
+        description: 'Directory to scan with Checkov'
+        required: false
+        type: string
+        default: '.'
+      dockerfile_path:
+        description: 'Path to the Dockerfile to build and scan'
+        required: false
+        type: string
+        default: './Dockerfile'
+      context:
+        description: 'Docker build context'
+        required: false
+        type: string
+        default: '.'
+      image_name:
+        description: 'Temporary image name used for the Trivy scan'
+        required: false
+        type: string
+        default: 'docker-lint'
+      skip_check:
+        description: 'Comma-separated Checkov checks to skip'
+        required: false
+        type: string
+        default: 'CKV_DOCKER_2,CKV_DOCKER_3'
+  workflow_dispatch:
+    inputs:
+      directory:
+        description: 'Directory to scan with Checkov'
+        required: false
+        type: string
+        default: '.'
+      dockerfile_path:
+        description: 'Path to the Dockerfile to build and scan'
+        required: false
+        type: string
+        default: './Dockerfile'
+      context:
+        description: 'Docker build context'
+        required: false
+        type: string
+        default: '.'
+      image_name:
+        description: 'Temporary image name used for the Trivy scan'
+        required: false
+        type: string
+        default: 'docker-lint'
+      skip_check:
+        description: 'Comma-separated Checkov checks to skip'
+        required: false
+        type: string
+        default: 'CKV_DOCKER_2,CKV_DOCKER_3'
+
+permissions:
+  contents: read
+
+jobs:
+  docker-lint:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Lint Dockerfile using Checkov
+        id: checkov
+        uses: bridgecrewio/checkov-action@master
+        with:
+          directory: ${{ inputs.directory }}
+          framework: dockerfile
+          quiet: true
+          container_user: 1000
+          skip_check: ${{ inputs.skip_check }}
+
+      - name: Build image from Dockerfile
+        run: >
+          docker build
+          -f "${{ inputs.dockerfile_path }}"
+          -t "${{ inputs.image_name }}:${{ github.sha }}"
+          "${{ inputs.context }}"
+
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@0.28.0
+        with:
+          image-ref: ${{ inputs.image_name }}:${{ github.sha }}
+          format: table
+          exit-code: '1'
+          ignore-unfixed: true
+          vuln-type: os,library
+          severity: CRITICAL,HIGH

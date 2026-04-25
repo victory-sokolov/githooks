@@ -20,6 +20,14 @@ on:
             target:
                 required: false
                 type: string
+            tags:
+                required: false
+                type: string
+                default: ""
+            platforms:
+                required: false
+                type: string
+                default: linux/amd64,linux/arm64
 
         secrets:
             registry_token:
@@ -36,6 +44,9 @@ jobs:
             - name: Checkout code
               uses: actions/checkout@v6
 
+            - name: Set up QEMU
+              uses: docker/setup-qemu-action@v4
+
             - name: Set up Docker Buildx
               uses: docker/setup-buildx-action@v4
 
@@ -47,33 +58,40 @@ jobs:
                   # Use the passed secret if available, otherwise fallback to GITHUB_TOKEN
                   password: ${{ secrets.registry_token || secrets.GITHUB_TOKEN }}
 
+            - name: Prepare metadata config
+              id: meta-config
+              uses: actions/github-script@v9
+              env:
+                  INPUT_TAGS: ${{ inputs.tags }}
+              with:
+                  script: |
+                      const tags = (process.env.INPUT_TAGS || '')
+                        .split(/\r?\n/)
+                        .map((tag) => tag.trim())
+                        .filter(Boolean);
+
+                      const isTag = context.refType === 'tag';
+                      const isMain = context.refType === 'branch' && context.refName === 'main';
+
+                      const metadataTags = tags.length > 0
+                        ? tags.map((tag) => `type=raw,value=${tag}`)
+                        : [
+                            'type=sha,format=long,prefix=sha-',
+                            `type=raw,value=latest,enable=${isMain || isTag}`,
+                            `type=raw,value=${context.refName},enable=${isTag}`,
+                          ];
+
+                      core.setOutput('tags', metadataTags.join('\n'));
+
             - name: Compute tags
               id: meta
-              shell: bash
-              run: |
-                  IMAGE="ghcr.io/${{ github.repository_owner }}/${{ inputs.image_name }}"
-
-                  {
-                    echo "tags<<EOF"
-                    echo "$IMAGE:sha-${GITHUB_SHA}"
-
-                    if [ "${GITHUB_REF_NAME}" = "main" ] || [ "${GITHUB_REF_TYPE}" = "tag" ]; then
-                      echo "$IMAGE:latest"
-                    fi
-
-                    if [ "${GITHUB_REF_TYPE}" = "tag" ]; then
-                      echo "$IMAGE:${GITHUB_REF_NAME}"
-                    fi
-
-                    echo "EOF"
-                  } >> "$GITHUB_OUTPUT"
-
-                  {
-                    echo "labels<<EOF"
-                    echo "org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}"
-                    echo "org.opencontainers.image.revision=${GITHUB_SHA}"
-                    echo "EOF"
-                  } >> "$GITHUB_OUTPUT"
+              uses: docker/metadata-action@v6
+              with:
+                  images: ghcr.io/${{ github.repository_owner }}/${{ inputs.image_name }}
+                  tags: ${{ steps.meta-config.outputs.tags }}
+                  labels: |
+                      org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}
+                      org.opencontainers.image.revision=${{ github.sha }}
 
             - name: Build and push
               uses: docker/build-push-action@v6
@@ -81,6 +99,7 @@ jobs:
                   context: ${{ inputs.context }}
                   file: ${{ inputs.dockerfile_path }}
                   target: ${{ inputs.target }}
+                  platforms: ${{ inputs.platforms }}
                   push: true
                   tags: ${{ steps.meta.outputs.tags }}
                   labels: ${{ steps.meta.outputs.labels }}

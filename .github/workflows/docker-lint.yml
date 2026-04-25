@@ -23,6 +23,11 @@ on:
                 required: false
                 type: string
                 default: 'docker-lint'
+            vuln_type:
+                description: 'Trivy package types to scan'
+                required: false
+                type: string
+                default: 'os'
             skip_check:
                 description: 'Comma-separated Checkov checks to skip'
                 required: false
@@ -50,6 +55,11 @@ on:
                 required: false
                 type: string
                 default: 'docker-lint'
+            vuln_type:
+                description: 'Trivy package types to scan'
+                required: false
+                type: string
+                default: 'os'
             skip_check:
                 description: 'Comma-separated Checkov checks to skip'
                 required: false
@@ -86,9 +96,9 @@ jobs:
             - name: Run Trivy vulnerability scanner
               uses: aquasecurity/trivy-action@v0.36.0
               with:
-                  image-ref: ${{ inputs.image_name }}:${{ github.sha }}
-                  format: table
-                  exit-code: '1'
-                  ignore-unfixed: true
-                  vuln-type: os,library
-                  severity: CRITICAL,HIGH
+                image-ref: ${{ inputs.image_name }}:${{ github.sha }}
+                format: table
+                exit-code: '1'
+                ignore-unfixed: true
+                vuln-type: '${{ inputs.vuln_type }}'
+                severity: CRITICAL,HIGH

@@ -1,89 +1,89 @@
 name: Docker Build on GHCR
 
 on:
-  workflow_call:
-    inputs:
-      image_name:
-        required: true
-        type: string
-      dockerfile_path:
-        required: false
-        type: string
-        default: ./Dockerfile
-      context:
-        required: false
-        type: string
-        default: .
-      build_args:
-        required: false
-        type: string
-      target:
-        required: false
-        type: string
+    workflow_call:
+        inputs:
+            image_name:
+                required: true
+                type: string
+            dockerfile_path:
+                required: false
+                type: string
+                default: ./Dockerfile
+            context:
+                required: false
+                type: string
+                default: .
+            build_args:
+                required: false
+                type: string
+            target:
+                required: false
+                type: string
 
-    secrets:
-      registry_token:
-        required: false
+        secrets:
+            registry_token:
+                required: false
 
 permissions:
-  contents: read
-  packages: write
+    contents: read
+    packages: write
 
 jobs:
-  build:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v6
+    build:
+        runs-on: ubuntu-latest
+        steps:
+            - name: Checkout code
+              uses: actions/checkout@v6
 
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v4
+            - name: Set up Docker Buildx
+              uses: docker/setup-buildx-action@v4
 
-      - name: Log in to GHCR
-        uses: docker/login-action@v4
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          # Use the passed secret if available, otherwise fallback to GITHUB_TOKEN
-          password: ${{ secrets.registry_token || secrets.GITHUB_TOKEN }}
+            - name: Log in to GHCR
+              uses: docker/login-action@v4
+              with:
+                  registry: ghcr.io
+                  username: ${{ github.actor }}
+                  # Use the passed secret if available, otherwise fallback to GITHUB_TOKEN
+                  password: ${{ secrets.registry_token || secrets.GITHUB_TOKEN }}
 
-      - name: Compute tags
-        id: meta
-        shell: bash
-        run: |
-          IMAGE="ghcr.io/${{ github.repository_owner }}/${{ inputs.image_name }}"
+            - name: Compute tags
+              id: meta
+              shell: bash
+              run: |
+                  IMAGE="ghcr.io/${{ github.repository_owner }}/${{ inputs.image_name }}"
 
-          {
-            echo "tags<<EOF"
-            echo "$IMAGE:sha-${GITHUB_SHA}"
+                  {
+                    echo "tags<<EOF"
+                    echo "$IMAGE:sha-${GITHUB_SHA}"
 
-            if [ "${GITHUB_REF_NAME}" = "main" ] || [ "${GITHUB_REF_TYPE}" = "tag" ]; then
-              echo "$IMAGE:latest"
-            fi
+                    if [ "${GITHUB_REF_NAME}" = "main" ] || [ "${GITHUB_REF_TYPE}" = "tag" ]; then
+                      echo "$IMAGE:latest"
+                    fi
 
-            if [ "${GITHUB_REF_TYPE}" = "tag" ]; then
-              echo "$IMAGE:${GITHUB_REF_NAME}"
-            fi
+                    if [ "${GITHUB_REF_TYPE}" = "tag" ]; then
+                      echo "$IMAGE:${GITHUB_REF_NAME}"
+                    fi
 
-            echo "EOF"
-          } >> "$GITHUB_OUTPUT"
+                    echo "EOF"
+                  } >> "$GITHUB_OUTPUT"
 
-          {
-            echo "labels<<EOF"
-            echo "org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}"
-            echo "org.opencontainers.image.revision=${GITHUB_SHA}"
-            echo "EOF"
-          } >> "$GITHUB_OUTPUT"
+                  {
+                    echo "labels<<EOF"
+                    echo "org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}"
+                    echo "org.opencontainers.image.revision=${GITHUB_SHA}"
+                    echo "EOF"
+                  } >> "$GITHUB_OUTPUT"
 
-      - name: Build and push
-        uses: docker/build-push-action@v6
-        with:
-          context: ${{ inputs.context }}
-          file: ${{ inputs.dockerfile_path }}
-          target: ${{ inputs.target }}
-          push: true
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
-          build-args: ${{ inputs.build_args }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+            - name: Build and push
+              uses: docker/build-push-action@v6
+              with:
+                  context: ${{ inputs.context }}
+                  file: ${{ inputs.dockerfile_path }}
+                  target: ${{ inputs.target }}
+                  push: true
+                  tags: ${{ steps.meta.outputs.tags }}
+                  labels: ${{ steps.meta.outputs.labels }}
+                  build-args: ${{ inputs.build_args }}
+                  cache-from: type=gha
+                  cache-to: type=gha,mode=max

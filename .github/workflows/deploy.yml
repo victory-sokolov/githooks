@@ -1,0 +1,466 @@
+name: Hetzner Deployment
+
+on:
+  workflow_dispatch:
+    inputs:
+      image_tag:
+        description: Docker image tag to deploy. Leave empty to build and publish sha-<commit SHA>.
+        required: false
+        type: string
+        default: ''
+      image_repository:
+        description: Image repository to pull from when image_tag is provided.
+        required: false
+        type: string
+        default: ''
+      local_image_name:
+        description: Local image name to use for validation builds when image_tag is empty.
+        required: false
+        type: string
+        default: ''
+      dockerfile_path:
+        description: Path to the Dockerfile used to build the production image.
+        required: false
+        type: string
+        default: apps/server/Dockerfile
+      docker_build_context:
+        description: Docker build context.
+        required: false
+        type: string
+        default: .
+      docker_target:
+        description: Docker build target.
+        required: false
+        type: string
+        default: production
+      publish_platforms:
+        description: Comma-separated list of platforms for the published image.
+        required: false
+        type: string
+        default: linux/amd64,linux/arm64
+      arm64_platform:
+        description: ARM platform that must exist on pulled production images.
+        required: false
+        type: string
+        default: linux/arm64
+      skip_smoke_test:
+        description: Skip the smoke-test step.
+        required: false
+        type: boolean
+        default: false
+      smoke_test_command:
+        description: Shell command used to smoke test the validated image.
+        required: false
+        type: string
+        default: 'bash scripts/smoke-test-image.sh "$IMAGE_REF" "$SMOKE_TEST_CONTAINER_NAME" "$SMOKE_TEST_ENV_FILE"'
+      smoke_test_container_name:
+        description: Container name passed to the smoke test command.
+        required: false
+        type: string
+        default: hetzner-deploy-smoke
+      smoke_test_env_file:
+        description: Env file passed to the smoke test command.
+        required: false
+        type: string
+        default: .env.ci
+      deploy_working_directory:
+        description: Directory containing the deployment project.
+        required: false
+        type: string
+        default: infra
+      install_command:
+        description: Command used to install deployment dependencies.
+        required: false
+        type: string
+        default: bun install
+      bun_version:
+        description: Bun version used for deployment tooling.
+        required: false
+        type: string
+        default: latest
+      pulumi_stack:
+        description: Pulumi stack to deploy.
+        required: false
+        type: string
+        default: prod
+      image_tag_config_key:
+        description: Pulumi config key that receives the image tag.
+        required: false
+        type: string
+        default: imageTag
+      pulumi_hetzner_token_key:
+        description: Pulumi config key for the Hetzner token.
+        required: false
+        type: string
+        default: hetznerToken
+      pulumi_ssh_public_key_key:
+        description: Pulumi config key for the SSH public key.
+        required: false
+        type: string
+        default: sshPublicKey
+      pulumi_ssh_private_key_key:
+        description: Pulumi config key for the SSH private key.
+        required: false
+        type: string
+        default: sshPrivateKey
+      pulumi_ghcr_token_key:
+        description: Pulumi config key for the GHCR token.
+        required: false
+        type: string
+        default: ghcrToken
+      pulumi_ghcr_username_key:
+        description: Pulumi config key for the GHCR username.
+        required: false
+        type: string
+        default: ghcrUsername
+      ghcr_username:
+        description: GHCR username passed into Pulumi config.
+        required: false
+        type: string
+        default: ''
+  workflow_call:
+    inputs:
+      image_tag:
+        description: Docker image tag to deploy. Leave empty to build and publish sha-<commit SHA>.
+        required: false
+        type: string
+        default: ''
+      image_repository:
+        description: Image repository to pull from when image_tag is provided.
+        required: false
+        type: string
+        default: ''
+      local_image_name:
+        description: Local image name to use for validation builds when image_tag is empty.
+        required: false
+        type: string
+        default: ''
+      dockerfile_path:
+        description: Path to the Dockerfile used to build the production image.
+        required: false
+        type: string
+        default: apps/server/Dockerfile
+      docker_build_context:
+        description: Docker build context.
+        required: false
+        type: string
+        default: .
+      docker_target:
+        description: Docker build target.
+        required: false
+        type: string
+        default: production
+      publish_platforms:
+        description: Comma-separated list of platforms for the published image.
+        required: false
+        type: string
+        default: linux/amd64,linux/arm64
+      arm64_platform:
+        description: ARM platform that must exist on pulled production images.
+        required: false
+        type: string
+        default: linux/arm64
+      skip_smoke_test:
+        description: Skip the smoke-test step.
+        required: false
+        type: boolean
+        default: false
+      smoke_test_command:
+        description: Shell command used to smoke test the validated image.
+        required: false
+        type: string
+        default: 'bash scripts/smoke-test-image.sh "$IMAGE_REF" "$SMOKE_TEST_CONTAINER_NAME" "$SMOKE_TEST_ENV_FILE"'
+      smoke_test_container_name:
+        description: Container name passed to the smoke test command.
+        required: false
+        type: string
+        default: hetzner-deploy-smoke
+      smoke_test_env_file:
+        description: Env file passed to the smoke test command.
+        required: false
+        type: string
+        default: .env.ci
+      deploy_working_directory:
+        description: Directory containing the deployment project.
+        required: false
+        type: string
+        default: infra
+      install_command:
+        description: Command used to install deployment dependencies.
+        required: false
+        type: string
+        default: bun install
+      bun_version:
+        description: Bun version used for deployment tooling.
+        required: false
+        type: string
+        default: latest
+      pulumi_stack:
+        description: Pulumi stack to deploy.
+        required: false
+        type: string
+        default: prod
+      image_tag_config_key:
+        description: Pulumi config key that receives the image tag.
+        required: false
+        type: string
+        default: imageTag
+      pulumi_hetzner_token_key:
+        description: Pulumi config key for the Hetzner token.
+        required: false
+        type: string
+        default: hetznerToken
+      pulumi_ssh_public_key_key:
+        description: Pulumi config key for the SSH public key.
+        required: false
+        type: string
+        default: sshPublicKey
+      pulumi_ssh_private_key_key:
+        description: Pulumi config key for the SSH private key.
+        required: false
+        type: string
+        default: sshPrivateKey
+      pulumi_ghcr_token_key:
+        description: Pulumi config key for the GHCR token.
+        required: false
+        type: string
+        default: ghcrToken
+      pulumi_ghcr_username_key:
+        description: Pulumi config key for the GHCR username.
+        required: false
+        type: string
+        default: ghcrUsername
+      ghcr_username:
+        description: GHCR username passed into Pulumi config.
+        required: false
+        type: string
+        default: ''
+    secrets:
+      pulumi_config_passphrase:
+        required: true
+      pulumi_backend_url:
+        required: true
+      r2_access_key_id:
+        required: true
+      r2_secret_access_key:
+        required: true
+      r2_endpoint:
+        required: true
+      hetzner_token:
+        required: true
+      ssh_public_key:
+        required: true
+      ssh_private_key:
+        required: true
+      ghcr_token:
+        required: false
+      dotenv_private_key:
+        required: false
+
+jobs:
+  validate-image:
+    name: Validate Docker Image
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: read
+    services:
+      postgres:
+        image: postgres:18-alpine
+        env:
+          POSTGRES_DB: mindsbrawl
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5433:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d mindsbrawl"
+          --health-interval 5s --health-timeout 5s --health-retries 5
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v6
+
+      - name: Set image reference
+        id: image
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          TAG="${{ inputs.image_tag }}"
+          IMAGE_REPOSITORY="${{ inputs.image_repository }}"
+          LOCAL_IMAGE_NAME="${{ inputs.local_image_name }}"
+
+          if [ -z "$IMAGE_REPOSITORY" ]; then
+            IMAGE_REPOSITORY="ghcr.io/${{ github.repository }}"
+          fi
+
+          if [ -z "$LOCAL_IMAGE_NAME" ]; then
+            LOCAL_IMAGE_NAME="${{ github.event.repository.name }}-deploy-smoke"
+          fi
+
+          if [ -z "$TAG" ]; then
+            TAG="sha-${{ github.sha }}"
+            echo "ref=${LOCAL_IMAGE_NAME}:${TAG}" >> "$GITHUB_OUTPUT"
+            echo "mode=build" >> "$GITHUB_OUTPUT"
+          else
+            echo "ref=${IMAGE_REPOSITORY}:${TAG}" >> "$GITHUB_OUTPUT"
+            echo "mode=pull" >> "$GITHUB_OUTPUT"
+          fi
+
+          echo "tag=${TAG}" >> "$GITHUB_OUTPUT"
+
+      - name: Login to GHCR
+        if: steps.image.outputs.mode == 'pull'
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo "${{ secrets.ghcr_token || github.token }}" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
+
+      - name: Set up Docker Buildx
+        if: steps.image.outputs.mode == 'pull'
+        uses: docker/setup-buildx-action@v4
+
+      - name: Build production image
+        if: steps.image.outputs.mode == 'build'
+        run: >-
+          docker build
+          -f "${{ inputs.dockerfile_path }}"
+          "${{ inputs.docker_build_context }}"
+          --target "${{ inputs.docker_target }}"
+          -t "${{ steps.image.outputs.ref }}"
+
+      - name: Pull production image
+        if: steps.image.outputs.mode == 'pull'
+        run: docker pull "${{ steps.image.outputs.ref }}"
+
+      - name: Verify ARM64 image support
+        if: steps.image.outputs.mode == 'pull'
+        shell: bash
+        run: |
+          set -euo pipefail
+          INSPECT_OUTPUT="$(docker buildx imagetools inspect "${{ steps.image.outputs.ref }}")"
+          echo "$INSPECT_OUTPUT"
+
+          if ! grep -q "${{ inputs.arm64_platform }}" <<<"$INSPECT_OUTPUT"; then
+            echo "Image ${{ steps.image.outputs.ref }} does not include a ${{ inputs.arm64_platform }} manifest."
+            echo "The target Hetzner server requires that image variant before deployment can proceed."
+            exit 1
+          fi
+
+      - name: Smoke test production image
+        if: ${{ !inputs.skip_smoke_test }}
+        shell: bash
+        env:
+          IMAGE_REF: ${{ steps.image.outputs.ref }}
+          SMOKE_TEST_CONTAINER_NAME: ${{ inputs.smoke_test_container_name }}
+          SMOKE_TEST_ENV_FILE: ${{ inputs.smoke_test_env_file }}
+        run: |
+          set -euo pipefail
+          eval "${{ inputs.smoke_test_command }}"
+
+  publish-image:
+    name: Publish Docker Image
+    needs: validate-image
+    if: ${{ inputs.image_tag == '' }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v6
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.ghcr_token || github.token }}
+
+      - name: Build and push multi-arch image
+        uses: docker/build-push-action@v6
+        with:
+          context: ${{ inputs.docker_build_context }}
+          file: ${{ inputs.dockerfile_path }}
+          target: ${{ inputs.docker_target }}
+          push: true
+          platforms: ${{ inputs.publish_platforms }}
+          tags: ghcr.io/${{ github.repository }}:sha-${{ github.sha }}
+
+  deploy:
+    name: Deploy Application
+    runs-on: ubuntu-latest
+    needs: [validate-image, publish-image]
+    if: ${{ always() && needs.validate-image.result == 'success' && (needs.publish-image.result == 'success' || needs.publish-image.result == 'skipped') }}
+    permissions:
+      contents: read
+      packages: read
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v6
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v1
+        with:
+          bun-version: ${{ inputs.bun_version }}
+
+      - name: Setup Pulumi
+        uses: pulumi/setup-pulumi@v2
+
+      - name: Install Dependencies
+        working-directory: ${{ inputs.deploy_working_directory }}
+        run: ${{ inputs.install_command }}
+
+      - name: Deploy with Pulumi
+        shell: bash
+        working-directory: ${{ inputs.deploy_working_directory }}
+        run: |
+          set -euo pipefail
+
+          if [ -z "$PULUMI_BACKEND_URL" ]; then
+            echo "Error: PULUMI_BACKEND_URL is not set."
+            exit 1
+          fi
+
+          TAG="${{ inputs.image_tag }}"
+          GHCR_USERNAME="${{ inputs.ghcr_username }}"
+
+          if [ -z "$TAG" ]; then
+            TAG="sha-${{ github.sha }}"
+          fi
+
+          if [ -z "$GHCR_USERNAME" ]; then
+            GHCR_USERNAME="${{ github.repository_owner }}"
+          fi
+
+          pulumi login "$PULUMI_BACKEND_URL"
+          pulumi stack select "${{ inputs.pulumi_stack }}" || pulumi stack init "${{ inputs.pulumi_stack }}"
+
+          pulumi config set "${{ inputs.pulumi_hetzner_token_key }}" "$HETZNER_TOKEN" --secret
+          pulumi config set "${{ inputs.pulumi_ssh_public_key_key }}" "$SSH_PUBLIC_KEY" --secret
+          pulumi config set "${{ inputs.pulumi_ssh_private_key_key }}" "$SSH_PRIVATE_KEY" --secret
+          pulumi config set "${{ inputs.pulumi_ghcr_token_key }}" "$GHCR_TOKEN" --secret
+          pulumi config set "${{ inputs.pulumi_ghcr_username_key }}" "$GHCR_USERNAME"
+
+          pulumi up \
+            --yes \
+            --message "Deploying image tag $TAG via GitHub Actions" \
+            -c "${{ inputs.image_tag_config_key }}=$TAG"
+        env:
+          PULUMI_CONFIG_PASSPHRASE: ${{ secrets.pulumi_config_passphrase || secrets.PULUMI_CONFIG_PASSPHRASE }}
+          PULUMI_BACKEND_URL: ${{ secrets.pulumi_backend_url || secrets.PULUMI_BACKEND_URL }}
+          AWS_ACCESS_KEY_ID: ${{ secrets.r2_access_key_id || secrets.R2_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.r2_secret_access_key || secrets.R2_SECRET_ACCESS_KEY }}
+          AWS_REGION: us-east-1
+          AWS_S3_ENDPOINT: ${{ secrets.r2_endpoint || secrets.R2_ENDPOINT }}
+          HETZNER_TOKEN: ${{ secrets.hetzner_token || secrets.HETZNER_TOKEN }}
+          SSH_PUBLIC_KEY: ${{ secrets.ssh_public_key || secrets.SSH_PUBLIC_KEY }}
+          SSH_PRIVATE_KEY: ${{ secrets.ssh_private_key || secrets.SSH_PRIVATE_KEY }}
+          GHCR_TOKEN: ${{ secrets.ghcr_token || github.token }}
+          DOTENV_PRIVATE_KEY: ${{ secrets.dotenv_private_key || secrets.DOTENV_PRIVATE_KEY }}
